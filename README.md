@@ -32,7 +32,7 @@ For Docker-Compose: [https://docs.docker.com/compose/install/](https://docs.dock
 
    ```sh
    git clone https://github.com/adnanjoun/web_sythn.git
-   cd SyntheaWeb
+   cd web_sythn
    ```
 3. **(Optional) Change credentials in the included .env file**
 4. **Start the application:**
