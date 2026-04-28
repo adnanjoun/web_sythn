@@ -1,6 +1,7 @@
 package com.syntheaweb.backend.mapperFhir;
 
 import com.syntheaweb.backend.database.entity.omop.Person;
+import com.syntheaweb.backend.service.ConceptService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -8,6 +9,12 @@ import java.time.ZoneId;
 
 @Component
 public class PatientMapper {
+
+    private final ConceptService conceptService;
+
+    public PatientMapper(ConceptService conceptService) {
+        this.conceptService = conceptService;
+    }
 
     public Person toPerson(org.hl7.fhir.r4.model.Patient patient) {
         Person person = new Person();
@@ -23,19 +30,9 @@ public class PatientMapper {
         }
 
         if (patient.hasGender()) {
-            person.setGenderConceptId(mapGender(patient.getGender().toCode()));
+            person.setGenderConceptId(conceptService.mapGender(patient.getGender().toCode()));
         }
 
         return person;
-    }
-
-    //hardcoded mappings
-    private int mapGender(String gender) {
-        return switch (gender) {
-            case "male" -> 8507;
-            case "female" -> 8532;
-            case "other" -> 8551;
-            default -> 0;
-        };
     }
 }
