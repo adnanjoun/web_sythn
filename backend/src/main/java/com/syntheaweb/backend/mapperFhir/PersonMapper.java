@@ -7,12 +7,15 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.ZoneId;
 
+/**
+ * Mapping Patient to Person
+ * */
 @Component
-public class PatientMapper {
+public class PersonMapper {
 
     private final ConceptService conceptService;
 
-    public PatientMapper(ConceptService conceptService) {
+    public PersonMapper(ConceptService conceptService) {
         this.conceptService = conceptService;
     }
 

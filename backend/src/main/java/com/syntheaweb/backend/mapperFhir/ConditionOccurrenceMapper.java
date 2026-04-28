@@ -1,12 +1,16 @@
 package com.syntheaweb.backend.mapperFhir;
 
 import com.syntheaweb.backend.database.entity.omop.ConditionOccurrence;
+import com.syntheaweb.backend.database.entity.omop.Person;
 import com.syntheaweb.backend.service.ConceptService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 
+/**
+ * Mapping Condition to ConditionOccurrence
+ * */
 @Component
 public class ConditionOccurrenceMapper {
 
@@ -16,8 +20,10 @@ public class ConditionOccurrenceMapper {
         this.conceptService = conceptService;
     }
 
-    public ConditionOccurrence toConditionOccurrence(org.hl7.fhir.r4.model.Condition condition) {
+    public ConditionOccurrence toConditionOccurrence(org.hl7.fhir.r4.model.Condition condition, Person person) {
         ConditionOccurrence conditionOccurrence = new ConditionOccurrence();
+
+        conditionOccurrence.setPerson(person);
 
         if (condition.getRecordedDate() != null) {
             LocalDate date = condition.getRecordedDate().toInstant()
