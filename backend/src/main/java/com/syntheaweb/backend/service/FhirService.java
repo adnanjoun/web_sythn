@@ -1,9 +1,11 @@
 package com.syntheaweb.backend.service;
 
 import ca.uhn.fhir.context.FhirContext;
+import com.syntheaweb.backend.database.entity.Run;
 import com.syntheaweb.backend.database.entity.omop.ConditionOccurrence;
 import com.syntheaweb.backend.database.entity.omop.Measurement;
 import com.syntheaweb.backend.database.entity.omop.Person;
+import com.syntheaweb.backend.database.repository.RunRepository;
 import com.syntheaweb.backend.database.repository.omop.ConditionOccurrenceRepository;
 import com.syntheaweb.backend.database.repository.omop.MeasurementRepository;
 import com.syntheaweb.backend.database.repository.omop.PersonRepository;
@@ -33,6 +35,8 @@ public class FhirService {
     private final ConditionOccurrenceRepository conditionOccurrenceRepository;
     @Autowired
     private final MeasurementRepository measurementRepository;
+    @Autowired
+    private final RunRepository runRepository;
 
     private final FhirContext fhirContext = FhirContext.forR4();
 
@@ -41,13 +45,15 @@ public class FhirService {
                        ConditionOccurrenceMapper conditionOccurrenceMapper,
                        ConditionOccurrenceRepository conditionOccurrenceRepository,
                        MeasurementMapper measurementMapper,
-                       MeasurementRepository measurementRepository) {
+                       MeasurementRepository measurementRepository,
+                       RunRepository runRepository) {
         this.personMapper = personMapper;
         this.personRepository = personRepository;
         this.conditionOccurrenceMapper = conditionOccurrenceMapper;
         this.conditionOccurrenceRepository = conditionOccurrenceRepository;
         this.measurementMapper = measurementMapper;
         this.measurementRepository = measurementRepository;
+        this.runRepository = runRepository;
     }
 
     public Bundle parseBundle(String json) {
@@ -60,17 +66,21 @@ public class FhirService {
 
         Map<String, Person> patientMap = new HashMap<>();
 
+        Run run = runRepository.findById(runId)
+                .orElseThrow();
+
         //Process Patients
         for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
             if (entry.getResource() instanceof Patient patient) {
                 Person person = personMapper.toPerson(patient);
-                person.setRunId(runId);
+                person.setRun(run);
+                //person.setRunId(runId);
 
                 System.out.println("SETTING PERSON RUN ID: " + runId);
 
                 person = personRepository.save(person);
 
-                System.out.println("SAVED PERSON RUN ID: " + person.getRunId());
+                System.out.println("SAVED PERSON RUN ID: " + person.getRun().getRunId());
 
                 patientMap.put(patient.getIdElement().getIdPart(), person);
                 System.out.println("Saved patient with ID: " + patient.getIdElement().getIdPart());
@@ -96,7 +106,7 @@ public class FhirService {
 
                 ConditionOccurrence conditionOccurrence =
                         conditionOccurrenceMapper.toConditionOccurrence(condition, person);
-                conditionOccurrence.setRunId(runId);
+                conditionOccurrence.setRun(run);
 
                 System.out.println("SETTING CONDITION RUN ID: " + runId);
                 conditionOccurrenceRepository.save(conditionOccurrence);
@@ -122,7 +132,7 @@ public class FhirService {
                 System.out.println("Extracted patientId: " + patientId);
 
                 Measurement measurement = measurementMapper.toMeasurement(observation, person);
-                measurement.setRunId(runId);
+                measurement.setRun(run);
 
                 System.out.println("SETTING MEASUREMENT RUN ID: " + runId);
                 measurementRepository.save(measurement);

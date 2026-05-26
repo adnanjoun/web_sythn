@@ -1,6 +1,9 @@
 package com.syntheaweb.backend.database.entity.omop;
 
+import com.syntheaweb.backend.database.entity.Run;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate;
 
@@ -15,6 +18,11 @@ public class Measurement {
     @ManyToOne
     @JoinColumn(name = "person_id", nullable = false)
     private Person person;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "run_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Run run;
 
     //TODO: implement correctly after concept entity exists
     // @ManyToOne
@@ -31,21 +39,19 @@ public class Measurement {
     @Column(name = "measurement_source_value")
     private String measurementSourceValue;
 
-    @Column(name = "run_id")
-    private String runId;
-
     public Measurement(){
 
     }
 
-    public Measurement(Long measurementId, Person person, Integer measurementConceptId, LocalDate measurementDate, Double valueAsNumber, String measurementSourceValue, String runId){
+    public Measurement(Long measurementId, Person person, Integer measurementConceptId, LocalDate measurementDate,
+                       Double valueAsNumber, String measurementSourceValue, Run run){
         this.measurementId = measurementId;
         this.person = person;
         this.measurementConceptId = measurementConceptId;
         this.measurementDate = measurementDate;
         this.valueAsNumber = valueAsNumber;
         this.measurementSourceValue = measurementSourceValue;
-        this.runId = runId;
+        this.run = run;
     }
 
     public Long getMeasurementId() {
@@ -96,11 +102,11 @@ public class Measurement {
         this.measurementSourceValue = measurementSourceValue;
     }
 
-    public String getRunId() {
-        return runId;
+    public Run getRun() {
+        return run;
     }
 
-    public void setRunId(String runId) {
-        this.runId = runId;
+    public void setRun(Run run) {
+        this.run = run;
     }
 }

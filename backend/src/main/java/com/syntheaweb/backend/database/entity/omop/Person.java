@@ -1,6 +1,9 @@
 package com.syntheaweb.backend.database.entity.omop;
 
+import com.syntheaweb.backend.database.entity.Run;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "person")
@@ -10,6 +13,11 @@ public class Person {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "person_id")
     private Long personId;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "run_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Run run;
 
     @Column(name = "year_of_birth")
     private Integer yearOfBirth;
@@ -23,20 +31,19 @@ public class Person {
     @Column(name = "gender_concept_id")
     private Integer genderConceptId;
 
-    @Column(name = "run_id")
-    private String runId;
 
     public Person(){
 
     }
 
-    public Person(Long personId, Integer yearOfBirth, Integer monthOfBirth, Integer dayOfBirth, Integer genderConceptId, String runId){
+    public Person(Long personId, Integer yearOfBirth, Integer monthOfBirth, Integer dayOfBirth, Integer genderConceptId,
+                  Run run){
         this.personId = personId;
         this.yearOfBirth = yearOfBirth;
         this.monthOfBirth = monthOfBirth;
         this.dayOfBirth = dayOfBirth;
         this.genderConceptId = genderConceptId;
-        this.runId = runId;
+        this.run = run;
     }
 
     public Long getId() {
@@ -79,11 +86,11 @@ public class Person {
         this.genderConceptId = genderConceptId;
     }
 
-    public String getRunId() {
-        return runId;
+    public Run getRun() {
+        return run;
     }
 
-    public void setRunId(String runId) {
-        this.runId = runId;
+    public void setRun(Run run) {
+        this.run = run;
     }
 }

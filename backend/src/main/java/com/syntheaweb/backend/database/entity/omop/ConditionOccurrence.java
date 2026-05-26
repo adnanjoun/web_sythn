@@ -1,6 +1,9 @@
 package com.syntheaweb.backend.database.entity.omop;
 
+import com.syntheaweb.backend.database.entity.Run;
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate;
 
@@ -17,6 +20,11 @@ public class ConditionOccurrence {
     @JoinColumn(name = "person_id", nullable = false)
     private Person person;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "run_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Run run;
+
     //TODO: implement correctly after concept entity exists
     // @ManyToOne
     // @JoinColumn(name = "condition_concept_id", nullable = false)
@@ -29,20 +37,18 @@ public class ConditionOccurrence {
     @Column(name = "condition_end_date")
     private LocalDate conditionEndDate;
 
-    @Column(name = "run_id")
-    private String runId;
-
     public ConditionOccurrence(){
 
     }
 
-    public ConditionOccurrence(Long conditionOccurrenceId, Person person, Integer conditionConceptId, LocalDate conditionStartDate, LocalDate conditionEndDate, String runId){
+    public ConditionOccurrence(Long conditionOccurrenceId, Person person, Integer conditionConceptId, LocalDate conditionStartDate,
+                               LocalDate conditionEndDate, Run run){
         this.conditionOccurrenceId = conditionOccurrenceId;
         this.person = person;
         this.conditionConceptId = conditionConceptId;
         this.conditionStartDate = conditionStartDate;
         this.conditionEndDate = conditionEndDate;
-        this.runId = runId;
+        this.run = run;
     }
 
     public Long getConditionOccurrenceId() {
@@ -85,11 +91,11 @@ public class ConditionOccurrence {
         this.conditionEndDate = conditionEndDate;
     }
 
-    public String getRunId() {
-        return runId;
+    public Run getRun() {
+        return run;
     }
 
-    public void setRunId(String runId) {
-        this.runId = runId;
+    public void setRun(Run run) {
+        this.run = run;
     }
 }

@@ -60,7 +60,7 @@ public class OmopExportService {
         String header = "person_id,year_of_birth,month_of_birth,day_of_birth,gender_concept_id\n"; //TODO: fill the missing fields, when implemented
         zos.write(header.getBytes());
 
-        List<Person> persons = personRepository.findByRunId(runId);
+        List<Person> persons = personRepository.findByRun_RunId(runId);
 
         for (Person p : persons) {
             String line = safe(p.getId()) + "," +
@@ -82,7 +82,7 @@ public class OmopExportService {
         String header = "condition_occurrence_id,person_id,condition_concept_id,start_date,end_date\n";
         zos.write(header.getBytes());
 
-        List<ConditionOccurrence> list = conditionRepository.findByRunId(runId);
+        List<ConditionOccurrence> list = conditionRepository.findByRun_RunId(runId);
 
         for (ConditionOccurrence c : list) {
             String line = safe(c.getConditionOccurrenceId()) + "," +
@@ -103,7 +103,7 @@ public class OmopExportService {
         String header = "measurement_id,person_id,concept_id,date,value,source_value\n";
         zos.write(header.getBytes());
 
-        List<Measurement> list = measurementRepository.findByRunId(runId);
+        List<Measurement> list = measurementRepository.findByRun_RunId(runId);
 
         for (Measurement m : list) {
             String line = safe(m.getMeasurementId()) + "," +
