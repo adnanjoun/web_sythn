@@ -31,26 +31,40 @@ public class Person {
     @Column(name = "gender_concept_id")
     private Integer genderConceptId;
 
+    @Column(name = "race_concept_id")
+    private Integer raceConceptId;
+
+    @Column(name = "ethnicity_concept_id")
+    private Integer ethnicityConceptId;
+
 
     public Person(){
 
     }
 
-    public Person(Long personId, Integer yearOfBirth, Integer monthOfBirth, Integer dayOfBirth, Integer genderConceptId,
-                  Run run){
+    public Person(Long personId,
+                  Integer yearOfBirth,
+                  Integer monthOfBirth,
+                  Integer dayOfBirth,
+                  Integer genderConceptId,
+                  Run run,
+                  Integer raceConceptId,
+                  Integer ethnicityConceptId){
         this.personId = personId;
         this.yearOfBirth = yearOfBirth;
         this.monthOfBirth = monthOfBirth;
         this.dayOfBirth = dayOfBirth;
         this.genderConceptId = genderConceptId;
         this.run = run;
+        this.raceConceptId = raceConceptId;
+        this.ethnicityConceptId = ethnicityConceptId;
     }
 
-    public Long getId() {
+    public Long getPersonId() {
         return personId;
     }
 
-    public void setId(Long personId) {
+    public void setPersonId(Long personId) {
         this.personId = personId;
     }
 
@@ -92,5 +106,21 @@ public class Person {
 
     public void setRun(Run run) {
         this.run = run;
+    }
+
+    public Integer getRaceConceptId() {
+        return raceConceptId;
+    }
+
+    public void setRaceConceptId(Integer raceConceptId) {
+        this.raceConceptId = raceConceptId;
+    }
+
+    public Integer getEthnicityConceptId() {
+        return ethnicityConceptId;
+    }
+
+    public void setEthnicityConceptId(Integer ethnicityConceptId) {
+        this.ethnicityConceptId = ethnicityConceptId;
     }
 }

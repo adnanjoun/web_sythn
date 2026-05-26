@@ -2,10 +2,11 @@ package com.syntheaweb.backend.mapperFhir;
 
 import com.syntheaweb.backend.database.entity.omop.ConditionOccurrence;
 import com.syntheaweb.backend.database.entity.omop.Person;
-import com.syntheaweb.backend.service.ConceptService;
+import com.syntheaweb.backend.service.ConceptMappingService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 /**
@@ -14,10 +15,10 @@ import java.time.ZoneId;
 @Component
 public class ConditionOccurrenceMapper {
 
-    private final ConceptService conceptService;
+    private final ConceptMappingService conceptMappingService;
 
-    public ConditionOccurrenceMapper(ConceptService conceptService) {
-        this.conceptService = conceptService;
+    public ConditionOccurrenceMapper(ConceptMappingService conceptMappingService) {
+        this.conceptMappingService = conceptMappingService;
     }
 
     public ConditionOccurrence toConditionOccurrence(org.hl7.fhir.r4.model.Condition condition, Person person) {
@@ -25,7 +26,17 @@ public class ConditionOccurrenceMapper {
 
         conditionOccurrence.setPerson(person);
 
-        if (condition.getRecordedDate() != null) {
+        if (condition.getOnsetDateTimeType() != null) {
+
+            LocalDateTime dateTime = condition.getOnsetDateTimeType()
+                    .getValue()
+                    .toInstant()
+                    .atZone(ZoneId.of("UTC"))
+                    .toLocalDateTime();
+
+            conditionOccurrence.setConditionStartDatetime(dateTime);
+            conditionOccurrence.setConditionStartDate(dateTime.toLocalDate());
+        } else if (condition.getRecordedDate() != null) {
             LocalDate date = condition.getRecordedDate().toInstant()
                     .atZone(ZoneId.of("UTC"))
                     .toLocalDate();
@@ -40,8 +51,12 @@ public class ConditionOccurrenceMapper {
             String code = coding.getCode();
             String system = coding.getSystem();
 
-            conditionOccurrence.setConditionConceptId(conceptService.mapCondition(code, system));
+            conditionOccurrence.setConditionConceptId(
+                    conceptMappingService.resolve(system, code));
         }
+
+        conditionOccurrence.setConditionTypeConceptId(32817);
+        //TODO map provide_id, Visit_occurrence_id
 
         return conditionOccurrence;
     }

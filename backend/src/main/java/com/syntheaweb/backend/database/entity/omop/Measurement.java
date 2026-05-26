@@ -6,6 +6,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "measurement")
@@ -39,12 +40,25 @@ public class Measurement {
     @Column(name = "measurement_source_value")
     private String measurementSourceValue;
 
+    @Column(name = "measurement_datetime")
+    private LocalDateTime measurementDatetime;
+
+    @Column(name = "unit_concept_id")
+    private Integer unitConceptId;
+
     public Measurement(){
 
     }
 
-    public Measurement(Long measurementId, Person person, Integer measurementConceptId, LocalDate measurementDate,
-                       Double valueAsNumber, String measurementSourceValue, Run run){
+    public Measurement(Long measurementId,
+                       Person person,
+                       Integer measurementConceptId,
+                       LocalDate measurementDate,
+                       Double valueAsNumber,
+                       String measurementSourceValue,
+                       Run run,
+                       LocalDateTime measurementDatetime,
+                       Integer unitConceptId){
         this.measurementId = measurementId;
         this.person = person;
         this.measurementConceptId = measurementConceptId;
@@ -52,6 +66,8 @@ public class Measurement {
         this.valueAsNumber = valueAsNumber;
         this.measurementSourceValue = measurementSourceValue;
         this.run = run;
+        this.measurementSourceValue = measurementSourceValue;
+        this.unitConceptId = unitConceptId;
     }
 
     public Long getMeasurementId() {
@@ -108,5 +124,21 @@ public class Measurement {
 
     public void setRun(Run run) {
         this.run = run;
+    }
+
+    public LocalDateTime getMeasurementDatetime() {
+        return measurementDatetime;
+    }
+
+    public void setMeasurementDatetime(LocalDateTime measurementDatetime) {
+        this.measurementDatetime = measurementDatetime;
+    }
+
+    public Integer getUnitConceptId() {
+        return unitConceptId;
+    }
+
+    public void setUnitConceptId(Integer unitConceptId) {
+        this.unitConceptId = unitConceptId;
     }
 }

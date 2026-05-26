@@ -1,7 +1,7 @@
 package com.syntheaweb.backend.mapperFhir;
 
 import com.syntheaweb.backend.database.entity.omop.Person;
-import com.syntheaweb.backend.service.ConceptService;
+import com.syntheaweb.backend.service.ConceptMappingService;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -13,10 +13,10 @@ import java.time.ZoneId;
 @Component
 public class PersonMapper {
 
-    private final ConceptService conceptService;
+    private final ConceptMappingService conceptMappingService;
 
-    public PersonMapper(ConceptService conceptService) {
-        this.conceptService = conceptService;
+    public PersonMapper(ConceptMappingService conceptMappingService) {
+        this.conceptMappingService = conceptMappingService;
     }
 
     public Person toPerson(org.hl7.fhir.r4.model.Patient patient) {
@@ -33,7 +33,7 @@ public class PersonMapper {
         }
 
         if (patient.hasGender()) {
-            person.setGenderConceptId(conceptService.mapGender(patient.getGender().toCode()));
+            person.setGenderConceptId(conceptMappingService.mapGender(patient.getGender().toCode()));
         }
 
         return person;

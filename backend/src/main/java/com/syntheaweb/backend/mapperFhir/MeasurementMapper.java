@@ -2,11 +2,12 @@ package com.syntheaweb.backend.mapperFhir;
 
 import com.syntheaweb.backend.database.entity.omop.Measurement;
 import com.syntheaweb.backend.database.entity.omop.Person;
-import com.syntheaweb.backend.service.ConceptService;
+import com.syntheaweb.backend.service.ConceptMappingService;
 import org.hl7.fhir.r4.model.Observation;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 /**
@@ -14,10 +15,10 @@ import java.time.ZoneId;
  * */
 @Component
 public class MeasurementMapper {
-    private final ConceptService conceptService;
+    private final ConceptMappingService conceptMappingService;
 
-    public MeasurementMapper(ConceptService conceptService) {
-        this.conceptService = conceptService;
+    public MeasurementMapper(ConceptMappingService conceptMappingService) {
+        this.conceptMappingService = conceptMappingService;
     }
 
     public Measurement toMeasurement(Observation observation, Person person) {
@@ -25,35 +26,47 @@ public class MeasurementMapper {
 
         measurement.setPerson(person);
 
-        // Date
+        // Datetime + Date
         if (observation.getEffectiveDateTimeType() != null) {
-            LocalDate date = observation.getEffectiveDateTimeType()
+
+            LocalDateTime dateTime = observation.getEffectiveDateTimeType()
                     .getValue()
                     .toInstant()
                     .atZone(ZoneId.of("UTC"))
-                    .toLocalDate();
+                    .toLocalDateTime();
 
-            measurement.setMeasurementDate(date);
+            measurement.setMeasurementDatetime(dateTime);
+            measurement.setMeasurementDate(dateTime.toLocalDate());
         }
 
         // Concept mapping
         if (observation.hasCode() && observation.getCode().hasCoding()) {
+
             var coding = observation.getCode().getCodingFirstRep();
 
             String code = coding.getCode();
             String system = coding.getSystem();
 
             measurement.setMeasurementConceptId(
-                    conceptService.mapObservation(code, system)
+                    conceptMappingService.resolve(system, code)
             );
 
             measurement.setMeasurementSourceValue(code);
         }
 
-        // Value
+        // Value + Unit
         if (observation.hasValueQuantity()) {
+
             measurement.setValueAsNumber(
-                    observation.getValueQuantity().getValue().doubleValue()
+                    observation.getValueQuantity()
+                            .getValue()
+                            .doubleValue()
+            );
+
+            String unitCode = observation.getValueQuantity().getCode();
+
+            measurement.setUnitConceptId(
+                    conceptMappingService.mapUnit(unitCode)
             );
         }
 
