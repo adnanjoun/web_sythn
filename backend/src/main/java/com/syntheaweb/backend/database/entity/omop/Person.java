@@ -23,16 +23,20 @@ public class Person {
     @Column(name = "gender_concept_id")
     private Integer genderConceptId;
 
+    @Column(name = "run_id")
+    private String runId;
+
     public Person(){
 
     }
 
-    public Person(Long personId, Integer yearOfBirth, Integer monthOfBirth, Integer dayOfBirth, Integer genderConceptId){
+    public Person(Long personId, Integer yearOfBirth, Integer monthOfBirth, Integer dayOfBirth, Integer genderConceptId, String runId){
         this.personId = personId;
         this.yearOfBirth = yearOfBirth;
         this.monthOfBirth = monthOfBirth;
         this.dayOfBirth = dayOfBirth;
         this.genderConceptId = genderConceptId;
+        this.runId = runId;
     }
 
     public Long getId() {
@@ -73,5 +77,13 @@ public class Person {
 
     public void setGenderConceptId(Integer genderConceptId) {
         this.genderConceptId = genderConceptId;
+    }
+
+    public String getRunId() {
+        return runId;
+    }
+
+    public void setRunId(String runId) {
+        this.runId = runId;
     }
 }

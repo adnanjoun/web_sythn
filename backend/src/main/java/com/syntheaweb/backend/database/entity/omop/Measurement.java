@@ -31,17 +31,21 @@ public class Measurement {
     @Column(name = "measurement_source_value")
     private String measurementSourceValue;
 
+    @Column(name = "run_id")
+    private String runId;
+
     public Measurement(){
 
     }
 
-    public Measurement(Long measurementId, Person person, Integer measurementConceptId, LocalDate measurementDate, Double valueAsNumber, String measurementSourceValue){
+    public Measurement(Long measurementId, Person person, Integer measurementConceptId, LocalDate measurementDate, Double valueAsNumber, String measurementSourceValue, String runId){
         this.measurementId = measurementId;
         this.person = person;
         this.measurementConceptId = measurementConceptId;
         this.measurementDate = measurementDate;
         this.valueAsNumber = valueAsNumber;
         this.measurementSourceValue = measurementSourceValue;
+        this.runId = runId;
     }
 
     public Long getMeasurementId() {
@@ -90,5 +94,13 @@ public class Measurement {
 
     public void setMeasurementSourceValue(String measurementSourceValue) {
         this.measurementSourceValue = measurementSourceValue;
+    }
+
+    public String getRunId() {
+        return runId;
+    }
+
+    public void setRunId(String runId) {
+        this.runId = runId;
     }
 }

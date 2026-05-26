@@ -29,16 +29,20 @@ public class ConditionOccurrence {
     @Column(name = "condition_end_date")
     private LocalDate conditionEndDate;
 
+    @Column(name = "run_id")
+    private String runId;
+
     public ConditionOccurrence(){
 
     }
 
-    public ConditionOccurrence(Long conditionOccurrenceId, Person person, Integer conditionConceptId, LocalDate conditionStartDate, LocalDate conditionEndDate){
+    public ConditionOccurrence(Long conditionOccurrenceId, Person person, Integer conditionConceptId, LocalDate conditionStartDate, LocalDate conditionEndDate, String runId){
         this.conditionOccurrenceId = conditionOccurrenceId;
         this.person = person;
         this.conditionConceptId = conditionConceptId;
         this.conditionStartDate = conditionStartDate;
         this.conditionEndDate = conditionEndDate;
+        this.runId = runId;
     }
 
     public Long getConditionOccurrenceId() {
@@ -79,5 +83,13 @@ public class ConditionOccurrence {
 
     public void setConditionEndDate(LocalDate conditionEndDate) {
         this.conditionEndDate = conditionEndDate;
+    }
+
+    public String getRunId() {
+        return runId;
+    }
+
+    public void setRunId(String runId) {
+        this.runId = runId;
     }
 }

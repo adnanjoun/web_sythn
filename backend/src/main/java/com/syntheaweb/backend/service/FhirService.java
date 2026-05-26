@@ -55,7 +55,7 @@ public class FhirService {
         return (Bundle) ctx.newJsonParser().parseResource(json);
     }
 
-    public void processBundle(String json) {
+    public void processBundle(String json, String runId) {
         Bundle bundle = parseBundle(json);
 
         Map<String, Person> patientMap = new HashMap<>();
@@ -64,7 +64,13 @@ public class FhirService {
         for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
             if (entry.getResource() instanceof Patient patient) {
                 Person person = personMapper.toPerson(patient);
+                person.setRunId(runId);
+
+                System.out.println("SETTING PERSON RUN ID: " + runId);
+
                 person = personRepository.save(person);
+
+                System.out.println("SAVED PERSON RUN ID: " + person.getRunId());
 
                 patientMap.put(patient.getIdElement().getIdPart(), person);
                 System.out.println("Saved patient with ID: " + patient.getIdElement().getIdPart());
@@ -90,6 +96,9 @@ public class FhirService {
 
                 ConditionOccurrence conditionOccurrence =
                         conditionOccurrenceMapper.toConditionOccurrence(condition, person);
+                conditionOccurrence.setRunId(runId);
+
+                System.out.println("SETTING CONDITION RUN ID: " + runId);
                 conditionOccurrenceRepository.save(conditionOccurrence);
             }
         }
@@ -113,6 +122,9 @@ public class FhirService {
                 System.out.println("Extracted patientId: " + patientId);
 
                 Measurement measurement = measurementMapper.toMeasurement(observation, person);
+                measurement.setRunId(runId);
+
+                System.out.println("SETTING MEASUREMENT RUN ID: " + runId);
                 measurementRepository.save(measurement);
             }
         }
