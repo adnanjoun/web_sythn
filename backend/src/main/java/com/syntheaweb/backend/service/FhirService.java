@@ -16,6 +16,8 @@ import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Condition;
 import org.hl7.fhir.r4.model.Observation;
 import org.hl7.fhir.r4.model.Patient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,9 @@ import java.util.Map;
 
 @Service
 public class FhirService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(FhirService.class);
 
     private final PersonMapper personMapper;
     private final ConditionOccurrenceMapper conditionOccurrenceMapper;
@@ -38,6 +43,9 @@ public class FhirService {
     @Autowired
     private final RunRepository runRepository;
 
+    @Autowired
+    private final ValidationService validationService;
+
     private final FhirContext fhirContext = FhirContext.forR4();
 
     public FhirService(PersonMapper personMapper,
@@ -46,7 +54,8 @@ public class FhirService {
                        ConditionOccurrenceRepository conditionOccurrenceRepository,
                        MeasurementMapper measurementMapper,
                        MeasurementRepository measurementRepository,
-                       RunRepository runRepository) {
+                       RunRepository runRepository,
+                       ValidationService validationService) {
         this.personMapper = personMapper;
         this.personRepository = personRepository;
         this.conditionOccurrenceMapper = conditionOccurrenceMapper;
@@ -54,9 +63,11 @@ public class FhirService {
         this.measurementMapper = measurementMapper;
         this.measurementRepository = measurementRepository;
         this.runRepository = runRepository;
+        this.validationService = validationService;
     }
 
     public Bundle parseBundle(String json) {
+        log.info("Starting parsing FHIR bundle.");
         FhirContext ctx = FhirContext.forR4();
         return (Bundle) ctx.newJsonParser().parseResource(json);
     }
@@ -69,27 +80,41 @@ public class FhirService {
         Run run = runRepository.findById(runId)
                 .orElseThrow();
 
+        log.info("Starting processing bundle for run {}", run.getRunId());
+
         //Process Patients
+        log.info("Processing Patient resources");
         for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
             if (entry.getResource() instanceof Patient patient) {
+
+                //validation
+                if (!validationService.validatePatient(patient)) {
+                    log.warn("Skipping invalid patient {}", patient.getId());
+                    continue;
+                }
+
                 Person person = personMapper.toPerson(patient);
                 person.setRun(run);
                 //person.setRunId(runId);
-
-                System.out.println("SETTING PERSON RUN ID: " + runId);
-
                 person = personRepository.save(person);
 
-                System.out.println("SAVED PERSON RUN ID: " + person.getRun().getRunId());
+                log.debug("Assigning run {} to person entity", runId);
 
                 patientMap.put(patient.getIdElement().getIdPart(), person);
-                System.out.println("Saved patient with ID: " + patient.getIdElement().getIdPart());
+                log.debug("Saved patient {}", patient.getIdElement().getIdPart());
             }
         }
 
         //Process Conditions
+        log.info("Processing Condition resources");
         for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
             if (entry.getResource() instanceof Condition condition) {
+
+                //validation
+                if (!validationService.validateCondition(condition)) {
+                    log.warn("Skipping invalid condition {}", condition.getId());
+                    continue;
+                }
 
                 // Extract patient reference
                 String patientId = condition.getSubject()
@@ -99,24 +124,37 @@ public class FhirService {
                 Person person = patientMap.get(patientId);
 
                 if (person == null) {
+                    log.error(
+                            "Referenced person {} not found for condition {}",
+                            patientId,
+                            condition.getId()
+                    );
+                    //TODO: check exception throwing!!
                     throw new RuntimeException("Person not found for reference: " + patientId);
                 }
-                System.out.println("Condition subject reference: " + condition.getSubject().getReference());
-                System.out.println("Extracted patientId: " + patientId);
+
+                log.debug("Resolved patient reference {}", patientId);
 
                 ConditionOccurrence conditionOccurrence =
                         conditionOccurrenceMapper.toConditionOccurrence(condition, person);
                 conditionOccurrence.setRun(run);
 
-                System.out.println("SETTING CONDITION RUN ID: " + runId);
+                log.debug("Assigning run {} to condition occurrence entity", runId);
                 conditionOccurrenceRepository.save(conditionOccurrence);
             }
         }
 
         //Process Measurement
+        log.info("Processing Observation resources");
         for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
 
             if (entry.getResource() instanceof Observation observation) {
+
+                //validation
+                if (!validationService.validateObservation(observation)) {
+                    log.warn("Skipping invalid observation {}", observation.getId());
+                    continue;
+                }
 
                 // Extract patient reference
                 String patientId = observation.getSubject()
@@ -126,18 +164,24 @@ public class FhirService {
                 Person person = patientMap.get(patientId);
 
                 if (person == null) {
+                    log.error(
+                            "Referenced person {} not found for observation {}",
+                            patientId,
+                            observation.getId()
+                    );
                     throw new RuntimeException("Person not found for reference: " + patientId);
                 }
-                System.out.println("Observation subject reference: " + observation.getSubject().getReference());
-                System.out.println("Extracted patientId: " + patientId);
+
+                log.debug("Resolved patient reference {}", patientId);
 
                 Measurement measurement = measurementMapper.toMeasurement(observation, person);
                 measurement.setRun(run);
 
-                System.out.println("SETTING MEASUREMENT RUN ID: " + runId);
+                log.debug("Assigning run {} to measurement entity", runId);
                 measurementRepository.save(measurement);
             }
         }
+        log.info("Finished processing bundle for run {}", run.getRunId());
     }
 
     /**

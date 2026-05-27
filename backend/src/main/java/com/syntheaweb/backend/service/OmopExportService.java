@@ -7,17 +7,21 @@ import com.syntheaweb.backend.database.repository.omop.ConditionOccurrenceReposi
 import com.syntheaweb.backend.database.repository.omop.MeasurementRepository;
 import com.syntheaweb.backend.database.repository.omop.PersonRepository;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.logging.Logger;
+import org.slf4j.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @Service
 public class OmopExportService {
+
+    private static final Logger log =
+            LoggerFactory.getLogger(OmopExportService.class);
 
     private final PersonRepository personRepository;
     private final ConditionOccurrenceRepository conditionRepository;
@@ -32,6 +36,7 @@ public class OmopExportService {
     }
 
     public void exportRun(String runId, HttpServletResponse response) throws IOException {
+        log.info("Starting OMOP export for run {}", runId);
 
         response.setContentType("application/zip");
         response.setHeader("Content-Disposition", "attachment; filename=omop_" + runId + ".zip");
@@ -43,6 +48,7 @@ public class OmopExportService {
             writeConditionCsv(runId, zos);
             writeMeasurementCsv(runId, zos);
         }
+        log.info("ZIP export completed successfully for run {}", runId);
     }
 
     /** For safe CSV Handling,
@@ -54,6 +60,7 @@ public class OmopExportService {
     }
 
     private void writePersonCsv(String runId, ZipOutputStream zos) throws IOException {
+        log.info("Exporting PERSON table for run {}", runId);
 
         zos.putNextEntry(new ZipEntry("person.csv"));
 
@@ -77,11 +84,13 @@ public class OmopExportService {
 
             zos.write(line.getBytes(StandardCharsets.UTF_8));
         }
+        log.info("Export PERSON rows: {}", persons.size());
 
         zos.closeEntry();
     }
 
     private void writeConditionCsv(String runId, ZipOutputStream zos) throws IOException {
+        log.info("Exporting CONDITION_OCCURRENCE table for run {}", runId);
 
         zos.putNextEntry(new ZipEntry("condition_occurrence.csv"));
 
@@ -111,10 +120,12 @@ public class OmopExportService {
 
             zos.write(line.getBytes(StandardCharsets.UTF_8));
         }
+        log.info("Export CONDITION rows: {}", list.size());
 
         zos.closeEntry();
     }
     private void writeMeasurementCsv(String runId, ZipOutputStream zos) throws IOException {
+        log.info("Exporting MEASUREMENT table for run {}", runId);
 
         zos.putNextEntry(new ZipEntry("measurement.csv"));
 
@@ -143,6 +154,7 @@ public class OmopExportService {
 
             zos.write(line.getBytes(StandardCharsets.UTF_8));
         }
+        log.info("Export MEASUREMENT rows: {}", list.size());
 
         zos.closeEntry();
     }

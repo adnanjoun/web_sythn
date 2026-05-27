@@ -38,16 +38,6 @@ public class OmopIngestionController {
         this.runRepository = runRepository;
     }
 
-    /*@PostMapping("/test/bundle")
-    public String test(@RequestBody String json) {
-        Bundle bundle = fhirService.parseBundle(json);
-        return "Entries: " + bundle.getEntry().size();
-    }*/
-    /*@PostMapping("/bundle")
-    public String processBundle(@RequestBody String json) {
-        fhirService.processBundle(json);
-        return "Bundle processed successfully";
-    }*/
     @PostMapping("/bundle")
     public String processBundle(@RequestBody String json, Principal principal) {
 
