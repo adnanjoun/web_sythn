@@ -2,20 +2,12 @@ package com.syntheaweb.backend.service;
 
 import ca.uhn.fhir.context.FhirContext;
 import com.syntheaweb.backend.database.entity.Run;
-import com.syntheaweb.backend.database.entity.omop.ConditionOccurrence;
-import com.syntheaweb.backend.database.entity.omop.Measurement;
+import com.syntheaweb.backend.database.entity.omop.*;
 import com.syntheaweb.backend.database.entity.omop.Person;
 import com.syntheaweb.backend.database.repository.RunRepository;
-import com.syntheaweb.backend.database.repository.omop.ConditionOccurrenceRepository;
-import com.syntheaweb.backend.database.repository.omop.MeasurementRepository;
-import com.syntheaweb.backend.database.repository.omop.PersonRepository;
-import com.syntheaweb.backend.mapperFhir.ConditionOccurrenceMapper;
-import com.syntheaweb.backend.mapperFhir.MeasurementMapper;
-import com.syntheaweb.backend.mapperFhir.PersonMapper;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Condition;
-import org.hl7.fhir.r4.model.Observation;
-import org.hl7.fhir.r4.model.Patient;
+import com.syntheaweb.backend.database.repository.omop.*;
+import com.syntheaweb.backend.mapperFhir.*;
+import org.hl7.fhir.r4.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +25,8 @@ public class FhirService {
     private final PersonMapper personMapper;
     private final ConditionOccurrenceMapper conditionOccurrenceMapper;
     private final MeasurementMapper measurementMapper;
+    private final VisitOccurrenceMapper visitOccurrenceMapper;
+    private final DrugExposureMapper drugExposureMapper;
 
     @Autowired
     private final PersonRepository personRepository;
@@ -42,6 +36,10 @@ public class FhirService {
     private final MeasurementRepository measurementRepository;
     @Autowired
     private final RunRepository runRepository;
+    @Autowired
+    private final VisitOccurrenceRepository visitOccurrenceRepository;
+    @Autowired
+    private final DrugExposureRepository drugExposureRepository;
 
     @Autowired
     private final ValidationService validationService;
@@ -55,7 +53,11 @@ public class FhirService {
                        MeasurementMapper measurementMapper,
                        MeasurementRepository measurementRepository,
                        RunRepository runRepository,
-                       ValidationService validationService) {
+                       ValidationService validationService,
+                       VisitOccurrenceRepository visitOccurrenceRepository,
+                       VisitOccurrenceMapper visitOccurrenceMapper,
+                       DrugExposureMapper drugExposureMapper,
+                       DrugExposureRepository drugExposureRepository) {
         this.personMapper = personMapper;
         this.personRepository = personRepository;
         this.conditionOccurrenceMapper = conditionOccurrenceMapper;
@@ -64,6 +66,10 @@ public class FhirService {
         this.measurementRepository = measurementRepository;
         this.runRepository = runRepository;
         this.validationService = validationService;
+        this.visitOccurrenceRepository = visitOccurrenceRepository;
+        this.visitOccurrenceMapper = visitOccurrenceMapper;
+        this.drugExposureMapper = drugExposureMapper;
+        this.drugExposureRepository = drugExposureRepository;
     }
 
     public Bundle parseBundle(String json) {
@@ -95,7 +101,7 @@ public class FhirService {
 
                 Person person = personMapper.toPerson(patient);
                 person.setRun(run);
-                //person.setRunId(runId);
+
                 person = personRepository.save(person);
 
                 log.debug("Assigning run {} to person entity", runId);
@@ -129,8 +135,7 @@ public class FhirService {
                             patientId,
                             condition.getId()
                     );
-                    //TODO: check exception throwing!!
-                    throw new RuntimeException("Person not found for reference: " + patientId);
+                    continue;
                 }
 
                 log.debug("Resolved patient reference {}", patientId);
@@ -144,7 +149,7 @@ public class FhirService {
             }
         }
 
-        //Process Measurement
+        //Process Observation
         log.info("Processing Observation resources");
         for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
 
@@ -179,6 +184,82 @@ public class FhirService {
 
                 log.debug("Assigning run {} to measurement entity", runId);
                 measurementRepository.save(measurement);
+            }
+        }
+
+        //Process Encounters
+        log.info("Processing Encounter resources");
+        for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+            if (entry.getResource() instanceof Encounter encounter) {
+
+                //validation
+                if (!validationService.validateEncounter(encounter)) {
+                    log.warn("Skipping invalid encounter {}", encounter.getId());
+                    continue;
+                }
+
+                // Extract patient reference
+                String patientId = encounter.getSubject()
+                        .getReferenceElement()
+                        .getIdPart();
+
+                Person person = patientMap.get(patientId);
+
+                if (person == null) {
+                    log.error(
+                            "Referenced person {} not found for encounter {}",
+                            patientId,
+                            encounter.getId()
+                    );
+                    continue;
+                }
+
+                log.debug("Resolved patient reference {}", patientId);
+
+                VisitOccurrence visitOccurrence =
+                        visitOccurrenceMapper.toVisitOccurrence(encounter, person);
+                visitOccurrence.setRun(run);
+
+                log.debug("Assigning run {} to visit occurrence entity", runId);
+                visitOccurrenceRepository.save(visitOccurrence);
+            }
+        }
+
+        //Process Medication Request
+        log.info("Processing Medication Request resources");
+        for (Bundle.BundleEntryComponent entry : bundle.getEntry()) {
+            if (entry.getResource() instanceof MedicationRequest medicationRequest) {
+
+                //validation
+                if (!validationService.validateMedicationRequest(medicationRequest)) {
+                    log.warn("Skipping invalid medication request {}", medicationRequest.getId());
+                    continue;
+                }
+
+                // Extract patient reference
+                String patientId = medicationRequest.getSubject()
+                        .getReferenceElement()
+                        .getIdPart();
+
+                Person person = patientMap.get(patientId);
+
+                if (person == null) {
+                    log.error(
+                            "Referenced person {} not found for medication request {}",
+                            patientId,
+                            medicationRequest.getId()
+                    );
+                    continue;
+                }
+
+                log.debug("Resolved patient reference {}", patientId);
+
+                DrugExposure drugExposure =
+                        drugExposureMapper.toDrugExposure(medicationRequest, person);
+                drugExposure.setRun(run);
+
+                log.debug("Assigning run {} to drug exposure entity", runId);
+                drugExposureRepository.save(drugExposure);
             }
         }
         log.info("Finished processing bundle for run {}", run.getRunId());

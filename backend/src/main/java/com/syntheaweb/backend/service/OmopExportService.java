@@ -1,11 +1,7 @@
 package com.syntheaweb.backend.service;
 
-import com.syntheaweb.backend.database.entity.omop.ConditionOccurrence;
-import com.syntheaweb.backend.database.entity.omop.Measurement;
-import com.syntheaweb.backend.database.entity.omop.Person;
-import com.syntheaweb.backend.database.repository.omop.ConditionOccurrenceRepository;
-import com.syntheaweb.backend.database.repository.omop.MeasurementRepository;
-import com.syntheaweb.backend.database.repository.omop.PersonRepository;
+import com.syntheaweb.backend.database.entity.omop.*;
+import com.syntheaweb.backend.database.repository.omop.*;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,13 +22,19 @@ public class OmopExportService {
     private final PersonRepository personRepository;
     private final ConditionOccurrenceRepository conditionRepository;
     private final MeasurementRepository measurementRepository;
+    private final VisitOccurrenceRepository visitOccurrenceRepository;
+    private final DrugExposureRepository drugExposureRepository;
 
     public OmopExportService(PersonRepository personRepository,
                              ConditionOccurrenceRepository conditionRepository,
-                             MeasurementRepository measurementRepository) {
+                             MeasurementRepository measurementRepository,
+                             VisitOccurrenceRepository visitOccurrenceRepository,
+                             DrugExposureRepository drugExposureRepository) {
         this.personRepository = personRepository;
         this.conditionRepository = conditionRepository;
         this.measurementRepository = measurementRepository;
+        this.visitOccurrenceRepository = visitOccurrenceRepository;
+        this.drugExposureRepository = drugExposureRepository;
     }
 
     public void exportRun(String runId, HttpServletResponse response) throws IOException {
@@ -47,6 +49,8 @@ public class OmopExportService {
             writePersonCsv(runId, zos);
             writeConditionCsv(runId, zos);
             writeMeasurementCsv(runId, zos);
+            writeVisitCsv(runId, zos);
+            writeDrugExposureCsv(runId, zos);
         }
         log.info("ZIP export completed successfully for run {}", runId);
     }
@@ -155,6 +159,76 @@ public class OmopExportService {
             zos.write(line.getBytes(StandardCharsets.UTF_8));
         }
         log.info("Export MEASUREMENT rows: {}", list.size());
+
+        zos.closeEntry();
+    }
+    private void writeVisitCsv(String runId, ZipOutputStream zos) throws IOException {
+        log.info("Exporting VISIT_OCCURRENCE table for run {}", runId);
+
+        zos.putNextEntry(new ZipEntry("visit_occurrence.csv"));
+
+        String header =
+                "visit_occurrence_id,person_id,visit_concept_id," +
+                        "visit_start_date,visit_start_datetime," +
+                        "visit_end_date,visit_end_datetime," +
+                        "visit_type_concept_id,provider_id\n";
+
+        zos.write(header.getBytes(StandardCharsets.UTF_8));
+
+        List<VisitOccurrence> list =
+                visitOccurrenceRepository.findByRun_RunId(runId);
+
+        for (VisitOccurrence v : list) {
+
+            String line =
+                    safe(v.getVisitOccurrenceId()) + "," +
+                            safe(v.getPerson().getPersonId()) + "," +
+                            safe(v.getVisitConceptId()) + "," +
+                            safe(v.getVisitStartDate()) + "," +
+                            safe(v.getVisitStartDatetime()) + "," +
+                            safe(v.getVisitEndDate()) + "," +
+                            safe(v.getVisitEndDatetime()) + "," +
+                            safe(v.getProviderId()) + "\n";
+
+            zos.write(line.getBytes(StandardCharsets.UTF_8));
+        }
+        log.info("Export VISIT rows: {}", list.size());
+
+        zos.closeEntry();
+    }
+
+    private void writeDrugExposureCsv(String runId, ZipOutputStream zos) throws IOException {
+        log.info("Exporting DRUG_EXPOSURE table for run {}", runId);
+
+        zos.putNextEntry(new ZipEntry("drug_exposure.csv"));
+
+        String header =
+                "drug_exposure_id,person_id,drug_concept_id," +
+                        "drug_exposure_start_date,drug_exposure_start_datetime," +
+                        "drug_exposure_end_date,drug_exposure_end_datetime," +
+                        "drug_exposure_type_concept_id,provider_id, visit_occurrence_id\n";
+
+        zos.write(header.getBytes(StandardCharsets.UTF_8));
+
+        List<DrugExposure> list =
+                drugExposureRepository.findByRun_RunId(runId);
+
+        for (DrugExposure d : list) {
+
+            String line =
+                    safe(d.getDrugExposureId()) + "," +
+                            safe(d.getPerson().getPersonId()) + "," +
+                            safe(d.getDrugConceptId()) + "," +
+                            safe(d.getDrugExposureStartDate()) + "," +
+                            safe(d.getDrugExposureStartDatetime()) + "," +
+                            safe(d.getDrugExposureEndDate()) + "," +
+                            safe(d.getDrugExposureEndDatetime()) + "," +
+                            safe(d.getProviderId()) + "," +
+                            safe(d.getVisitOccurrenceId()) +"\n";
+
+            zos.write(line.getBytes(StandardCharsets.UTF_8));
+        }
+        log.info("Export DRUG EXPOSURE rows: {}", list.size());
 
         zos.closeEntry();
     }

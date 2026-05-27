@@ -10,11 +10,24 @@ public class ConceptMappingService {
 
     private final Map<String, Integer> mappings = Map.of(
 
-            "http://snomed.info/sct|44054006",201826,
-            "http://snomed.info/sct|38341003",319835,
-            "http://loinc.org|8867-4",3027018,
+            // Conditions
+            "http://snomed.info/sct|44054006", 201826,
+            "http://snomed.info/sct|38341003", 319835,
+
+            // Measurements
+            "http://loinc.org|8867-4", 3027018,
             "http://loinc.org|8480-6", 3004249,
-            "http://loinc.org|8462-4",3012888
+            "http://loinc.org|8462-4", 3012888,
+
+            // Encounter / VisitOccurrence
+            "http://terminology.hl7.org/CodeSystem/v3-ActCode|IMP", 9201,
+            "http://terminology.hl7.org/CodeSystem/v3-ActCode|AMB", 9202,
+            "http://terminology.hl7.org/CodeSystem/v3-ActCode|EMER", 9203,
+
+            // Medications (RxNorm preferred)
+            "http://www.nlm.nih.gov/research/umls/rxnorm|860975", 860975,
+            "http://www.nlm.nih.gov/research/umls/rxnorm|617314", 617314
+
     );
 
     public int resolve(String system, String code) {
