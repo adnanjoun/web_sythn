@@ -51,6 +51,10 @@ public class MeasurementMapper {
                     conceptMappingService.resolve(system, code)
             );
 
+            measurement.setMeasurementTypeConceptId(
+                    ConceptMappingService.LAB_RESULT
+            );
+
             measurement.setMeasurementSourceValue(code);
         }
 

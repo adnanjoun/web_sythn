@@ -84,7 +84,9 @@ public class DrugExposureMapper {
                     conceptMappingService.resolve(system, code));
         }
 
-        drugExposure.setDrugExposureTypeConceptId(38000177); //38000177 = Prescription written
+        drugExposure.setDrugExposureTypeConceptId(
+                ConceptMappingService.PRESCRIPTION_WRITTEN
+        );
 
         // TODO:
         // map provider_id

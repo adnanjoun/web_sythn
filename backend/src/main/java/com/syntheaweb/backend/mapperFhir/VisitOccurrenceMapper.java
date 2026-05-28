@@ -63,7 +63,9 @@ public class VisitOccurrenceMapper {
                     conceptMappingService.resolve(system, code));
         }
 
-        visitOccurrence.setVisitTypeConceptId(32817); //EHR_RECORD
+        visitOccurrence.setVisitTypeConceptId(
+                ConceptMappingService.EHR_RECORD
+        );
 
         return visitOccurrence;
     }

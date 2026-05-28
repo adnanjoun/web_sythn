@@ -55,7 +55,9 @@ public class ConditionOccurrenceMapper {
                     conceptMappingService.resolve(system, code));
         }
 
-        conditionOccurrence.setConditionTypeConceptId(32817);
+        conditionOccurrence.setConditionTypeConceptId(
+                ConceptMappingService.EHR_RECORD
+        );
         //TODO map provide_id, Visit_occurrence_id
 
         return conditionOccurrence;

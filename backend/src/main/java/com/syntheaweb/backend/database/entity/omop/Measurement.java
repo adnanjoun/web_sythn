@@ -14,6 +14,7 @@ public class Measurement {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "measurement_id")
     private Long measurementId;
 
     @ManyToOne
@@ -46,6 +47,9 @@ public class Measurement {
     @Column(name = "unit_concept_id")
     private Integer unitConceptId;
 
+    @Column(name = "measurement_type_concept_id")
+    private Integer measurementTypeConceptId;
+
     public Measurement(){
 
     }
@@ -58,7 +62,8 @@ public class Measurement {
                        String measurementSourceValue,
                        Run run,
                        LocalDateTime measurementDatetime,
-                       Integer unitConceptId){
+                       Integer unitConceptId,
+                       Integer measurementTypeConceptId){
         this.measurementId = measurementId;
         this.person = person;
         this.measurementConceptId = measurementConceptId;
@@ -68,6 +73,7 @@ public class Measurement {
         this.run = run;
         this.measurementSourceValue = measurementSourceValue;
         this.unitConceptId = unitConceptId;
+        this.measurementTypeConceptId = measurementTypeConceptId;
     }
 
     public Long getMeasurementId() {
@@ -140,5 +146,13 @@ public class Measurement {
 
     public void setUnitConceptId(Integer unitConceptId) {
         this.unitConceptId = unitConceptId;
+    }
+
+    public Integer getMeasurementTypeConceptId() {
+        return measurementTypeConceptId;
+    }
+
+    public void setMeasurementTypeConceptId(Integer measurementTypeConceptId) {
+        this.measurementTypeConceptId = measurementTypeConceptId;
     }
 }

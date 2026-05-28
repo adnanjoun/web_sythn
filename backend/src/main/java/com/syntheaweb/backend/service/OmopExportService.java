@@ -24,17 +24,20 @@ public class OmopExportService {
     private final MeasurementRepository measurementRepository;
     private final VisitOccurrenceRepository visitOccurrenceRepository;
     private final DrugExposureRepository drugExposureRepository;
+    private final ObservationPeriodRepository observationPeriodRepository;
 
     public OmopExportService(PersonRepository personRepository,
                              ConditionOccurrenceRepository conditionRepository,
                              MeasurementRepository measurementRepository,
                              VisitOccurrenceRepository visitOccurrenceRepository,
-                             DrugExposureRepository drugExposureRepository) {
+                             DrugExposureRepository drugExposureRepository,
+                             ObservationPeriodRepository observationPeriodRepository) {
         this.personRepository = personRepository;
         this.conditionRepository = conditionRepository;
         this.measurementRepository = measurementRepository;
         this.visitOccurrenceRepository = visitOccurrenceRepository;
         this.drugExposureRepository = drugExposureRepository;
+        this.observationPeriodRepository = observationPeriodRepository;
     }
 
     public void exportRun(String runId, HttpServletResponse response) throws IOException {
@@ -51,6 +54,7 @@ public class OmopExportService {
             writeMeasurementCsv(runId, zos);
             writeVisitCsv(runId, zos);
             writeDrugExposureCsv(runId, zos);
+            writeObservationPeriodCsv(runId, zos);
         }
         log.info("ZIP export completed successfully for run {}", runId);
     }
@@ -136,7 +140,7 @@ public class OmopExportService {
         String header =
                 "measurement_id,person_id,measurement_concept_id," +
                         "measurement_date,measurement_datetime," +
-                        "value_as_number,unit_concept_id," +
+                        "value_as_number,unit_concept_id, measurement_type_concept_id" +
                         "measurement_source_value\n";
 
         zos.write(header.getBytes(StandardCharsets.UTF_8));
@@ -154,6 +158,7 @@ public class OmopExportService {
                             safe(m.getMeasurementDatetime()) + "," +
                             safe(m.getValueAsNumber()) + "," +
                             safe(m.getUnitConceptId()) + "," +
+                            safe(m.getMeasurementTypeConceptId()) + "," +
                             safe(m.getMeasurementSourceValue()) + "\n";
 
             zos.write(line.getBytes(StandardCharsets.UTF_8));
@@ -188,6 +193,7 @@ public class OmopExportService {
                             safe(v.getVisitStartDatetime()) + "," +
                             safe(v.getVisitEndDate()) + "," +
                             safe(v.getVisitEndDatetime()) + "," +
+                            safe(v.getVisitTypeConceptId()) + "," +
                             safe(v.getProviderId()) + "\n";
 
             zos.write(line.getBytes(StandardCharsets.UTF_8));
@@ -206,7 +212,7 @@ public class OmopExportService {
                 "drug_exposure_id,person_id,drug_concept_id," +
                         "drug_exposure_start_date,drug_exposure_start_datetime," +
                         "drug_exposure_end_date,drug_exposure_end_datetime," +
-                        "drug_exposure_type_concept_id,provider_id, visit_occurrence_id\n";
+                        "drug_exposure_type_concept_id,provider_id,visit_occurrence_id\n";
 
         zos.write(header.getBytes(StandardCharsets.UTF_8));
 
@@ -229,6 +235,38 @@ public class OmopExportService {
             zos.write(line.getBytes(StandardCharsets.UTF_8));
         }
         log.info("Export DRUG EXPOSURE rows: {}", list.size());
+
+        zos.closeEntry();
+    }
+
+    private void writeObservationPeriodCsv(String runId, ZipOutputStream zos) throws IOException {
+
+        log.info("Exporting OBSERVATION_PERIOD table for run {}", runId);
+
+        zos.putNextEntry(new ZipEntry("observation_period.csv"));
+
+        String header =
+                "observation_period_id,person_id,observation_period_start_date," +
+                        "observation_period_end_date,period_type_concept_id\n";
+
+        zos.write(header.getBytes(StandardCharsets.UTF_8));
+
+        List<ObservationPeriod> list =
+                observationPeriodRepository.findByRun_RunId(runId);
+
+        for (ObservationPeriod op : list) {
+
+            String line =
+                    safe(op.getObservationPeriodId()) + "," +
+                            safe(op.getPerson().getPersonId()) + "," +
+                            safe(op.getObservationPeriodStartDate()) + "," +
+                            safe(op.getObservationPeriodEndDate()) + "," +
+                            safe(op.getPeriodTypeConceptId()) + "\n";
+
+            zos.write(line.getBytes(StandardCharsets.UTF_8));
+        }
+
+        log.info("Export OBSERVATION_PERIOD rows: {}", list.size());
 
         zos.closeEntry();
     }

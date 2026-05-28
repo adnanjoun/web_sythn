@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 
 @Service
 public class FhirService {
@@ -43,6 +43,8 @@ public class FhirService {
 
     @Autowired
     private final ValidationService validationService;
+    @Autowired
+    private final ObservationPeriodService observationPeriodService;
 
     private final FhirContext fhirContext = FhirContext.forR4();
 
@@ -57,7 +59,8 @@ public class FhirService {
                        VisitOccurrenceRepository visitOccurrenceRepository,
                        VisitOccurrenceMapper visitOccurrenceMapper,
                        DrugExposureMapper drugExposureMapper,
-                       DrugExposureRepository drugExposureRepository) {
+                       DrugExposureRepository drugExposureRepository,
+                       ObservationPeriodService observationPeriodService) {
         this.personMapper = personMapper;
         this.personRepository = personRepository;
         this.conditionOccurrenceMapper = conditionOccurrenceMapper;
@@ -70,6 +73,7 @@ public class FhirService {
         this.visitOccurrenceMapper = visitOccurrenceMapper;
         this.drugExposureMapper = drugExposureMapper;
         this.drugExposureRepository = drugExposureRepository;
+        this.observationPeriodService = observationPeriodService;
     }
 
     public Bundle parseBundle(String json) {
@@ -82,6 +86,9 @@ public class FhirService {
         Bundle bundle = parseBundle(json);
 
         Map<String, Person> patientMap = new HashMap<>();
+
+        //to store dates for each patient, Observation Period
+        Map<String, List<LocalDate>> patientDatesMap = new HashMap<>();
 
         Run run = runRepository.findById(runId)
                 .orElseThrow();
@@ -107,6 +114,9 @@ public class FhirService {
                 log.debug("Assigning run {} to person entity", runId);
 
                 patientMap.put(patient.getIdElement().getIdPart(), person);
+
+                //to store dates for each patient, Observation Period
+                patientDatesMap.put(patient.getIdElement().getIdPart(), new ArrayList<>());
                 log.debug("Saved patient {}", patient.getIdElement().getIdPart());
             }
         }
@@ -136,6 +146,16 @@ public class FhirService {
                             condition.getId()
                     );
                     continue;
+                }
+
+                //store data for Observation Period
+                LocalDate resourceDate =
+                        observationPeriodService.extractDateFromResource(condition);
+
+                List<LocalDate> dates = patientDatesMap.get(patientId);
+
+                if (dates != null && resourceDate != null) {
+                    dates.add(resourceDate);
                 }
 
                 log.debug("Resolved patient reference {}", patientId);
@@ -177,6 +197,16 @@ public class FhirService {
                     throw new RuntimeException("Person not found for reference: " + patientId);
                 }
 
+                //store data for Observation Period
+                LocalDate resourceDate =
+                        observationPeriodService.extractDateFromResource(observation);
+
+                List<LocalDate> dates = patientDatesMap.get(patientId);
+
+                if (dates != null && resourceDate != null) {
+                    dates.add(resourceDate);
+                }
+
                 log.debug("Resolved patient reference {}", patientId);
 
                 Measurement measurement = measurementMapper.toMeasurement(observation, person);
@@ -212,6 +242,16 @@ public class FhirService {
                             encounter.getId()
                     );
                     continue;
+                }
+
+                //store data for Observation Period
+                LocalDate resourceDate =
+                        observationPeriodService.extractDateFromResource(encounter);
+
+                List<LocalDate> dates = patientDatesMap.get(patientId);
+
+                if (dates != null && resourceDate != null) {
+                    dates.add(resourceDate);
                 }
 
                 log.debug("Resolved patient reference {}", patientId);
@@ -252,6 +292,16 @@ public class FhirService {
                     continue;
                 }
 
+                //store data for Observation Period
+                LocalDate resourceDate =
+                        observationPeriodService.extractDateFromResource(medicationRequest);
+
+                List<LocalDate> dates = patientDatesMap.get(patientId);
+
+                if (dates != null && resourceDate != null) {
+                    dates.add(resourceDate);
+                }
+
                 log.debug("Resolved patient reference {}", patientId);
 
                 DrugExposure drugExposure =
@@ -261,6 +311,41 @@ public class FhirService {
                 log.debug("Assigning run {} to drug exposure entity", runId);
                 drugExposureRepository.save(drugExposure);
             }
+        }
+
+        //generate Observation Periods after all processing
+        log.info("Generating observation periods");
+
+        for (Map.Entry<String, List<LocalDate>> entry
+                : patientDatesMap.entrySet()) {
+
+            String patientId = entry.getKey();
+
+            List<LocalDate> dates = entry.getValue();
+
+            if (dates.isEmpty()) {
+                log.warn("No dates found for patient {}", patientId);
+                continue;
+            }
+
+            LocalDate startDate = Collections.min(dates);
+            LocalDate endDate = Collections.max(dates);
+
+            Person person = patientMap.get(patientId);
+
+            observationPeriodService.createObservationPeriod(
+                    person,
+                    run,
+                    startDate,
+                    endDate
+            );
+
+            log.debug(
+                    "Created observation period for patient {} from {} to {}",
+                    patientId,
+                    startDate,
+                    endDate
+            );
         }
         log.info("Finished processing bundle for run {}", run.getRunId());
     }
