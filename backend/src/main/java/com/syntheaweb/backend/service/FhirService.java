@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -45,6 +46,8 @@ public class FhirService {
     private final ValidationService validationService;
     @Autowired
     private final ObservationPeriodService observationPeriodService;
+    @Autowired
+    private final StorageService storageService;
 
     private final FhirContext fhirContext = FhirContext.forR4();
 
@@ -60,7 +63,8 @@ public class FhirService {
                        VisitOccurrenceMapper visitOccurrenceMapper,
                        DrugExposureMapper drugExposureMapper,
                        DrugExposureRepository drugExposureRepository,
-                       ObservationPeriodService observationPeriodService) {
+                       ObservationPeriodService observationPeriodService,
+                       StorageService storageService) {
         this.personMapper = personMapper;
         this.personRepository = personRepository;
         this.conditionOccurrenceMapper = conditionOccurrenceMapper;
@@ -74,6 +78,7 @@ public class FhirService {
         this.drugExposureMapper = drugExposureMapper;
         this.drugExposureRepository = drugExposureRepository;
         this.observationPeriodService = observationPeriodService;
+        this.storageService = storageService;
     }
 
     public Bundle parseBundle(String json) {
@@ -82,16 +87,36 @@ public class FhirService {
         return (Bundle) ctx.newJsonParser().parseResource(json);
     }
 
-    public void processBundle(String json, String runId) {
-        Bundle bundle = parseBundle(json);
+    public void processRun(String runId) throws IOException {
+
+        Run run = runRepository.findById(runId)
+                .orElseThrow(() -> new RuntimeException("Run not found"));
+
+        log.info("Starting OMOP processing for run {}", runId);
+
+        List<String> bundleJsonList =
+                storageService.readAllFhirBundles(runId);
+
+        if (bundleJsonList.isEmpty()) {
+            throw new RuntimeException("No FHIR bundles found for run " + runId);
+        }
+
+        for (String json : bundleJsonList) {
+
+            Bundle bundle = parseBundle(json);
+
+            processBundle(bundle, run);
+        }
+
+        log.info("Finished OMOP processing for run {}", runId);
+    }
+
+    private void processBundle(Bundle bundle, Run run){
 
         Map<String, Person> patientMap = new HashMap<>();
 
         //to store dates for each patient, Observation Period
         Map<String, List<LocalDate>> patientDatesMap = new HashMap<>();
-
-        Run run = runRepository.findById(runId)
-                .orElseThrow();
 
         log.info("Starting processing bundle for run {}", run.getRunId());
 
@@ -111,7 +136,7 @@ public class FhirService {
 
                 person = personRepository.save(person);
 
-                log.debug("Assigning run {} to person entity", runId);
+                log.debug("Assigning run {} to person entity", run.getRunId());
 
                 patientMap.put(patient.getIdElement().getIdPart(), person);
 
@@ -164,7 +189,7 @@ public class FhirService {
                         conditionOccurrenceMapper.toConditionOccurrence(condition, person);
                 conditionOccurrence.setRun(run);
 
-                log.debug("Assigning run {} to condition occurrence entity", runId);
+                log.debug("Assigning run {} to condition occurrence entity", run.getRunId());
                 conditionOccurrenceRepository.save(conditionOccurrence);
             }
         }
@@ -212,7 +237,7 @@ public class FhirService {
                 Measurement measurement = measurementMapper.toMeasurement(observation, person);
                 measurement.setRun(run);
 
-                log.debug("Assigning run {} to measurement entity", runId);
+                log.debug("Assigning run {} to measurement entity", run.getRunId());
                 measurementRepository.save(measurement);
             }
         }
@@ -260,7 +285,7 @@ public class FhirService {
                         visitOccurrenceMapper.toVisitOccurrence(encounter, person);
                 visitOccurrence.setRun(run);
 
-                log.debug("Assigning run {} to visit occurrence entity", runId);
+                log.debug("Assigning run {} to visit occurrence entity", run.getRunId());
                 visitOccurrenceRepository.save(visitOccurrence);
             }
         }
@@ -308,7 +333,7 @@ public class FhirService {
                         drugExposureMapper.toDrugExposure(medicationRequest, person);
                 drugExposure.setRun(run);
 
-                log.debug("Assigning run {} to drug exposure entity", runId);
+                log.debug("Assigning run {} to drug exposure entity", run.getRunId());
                 drugExposureRepository.save(drugExposure);
             }
         }

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 
 @RestController
-@RequestMapping("/omop")
+@RequestMapping("/api/omop")
 public class OmopExportController {
 
     private final OmopExportService omopExportService;

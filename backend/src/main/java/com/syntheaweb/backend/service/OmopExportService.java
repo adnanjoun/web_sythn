@@ -1,6 +1,7 @@
 package com.syntheaweb.backend.service;
 
 import com.syntheaweb.backend.database.entity.omop.*;
+import com.syntheaweb.backend.database.repository.RunRepository;
 import com.syntheaweb.backend.database.repository.omop.*;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.LoggerFactory;
@@ -25,23 +26,30 @@ public class OmopExportService {
     private final VisitOccurrenceRepository visitOccurrenceRepository;
     private final DrugExposureRepository drugExposureRepository;
     private final ObservationPeriodRepository observationPeriodRepository;
+    private final RunRepository runRepository;
 
     public OmopExportService(PersonRepository personRepository,
                              ConditionOccurrenceRepository conditionRepository,
                              MeasurementRepository measurementRepository,
                              VisitOccurrenceRepository visitOccurrenceRepository,
                              DrugExposureRepository drugExposureRepository,
-                             ObservationPeriodRepository observationPeriodRepository) {
+                             ObservationPeriodRepository observationPeriodRepository,
+                             RunRepository runRepository) {
         this.personRepository = personRepository;
         this.conditionRepository = conditionRepository;
         this.measurementRepository = measurementRepository;
         this.visitOccurrenceRepository = visitOccurrenceRepository;
         this.drugExposureRepository = drugExposureRepository;
         this.observationPeriodRepository = observationPeriodRepository;
+        this.runRepository = runRepository;
     }
 
     public void exportRun(String runId, HttpServletResponse response) throws IOException {
         log.info("Starting OMOP export for run {}", runId);
+
+        if (!runRepository.existsById(runId)) {
+            throw new RuntimeException("Run not found");
+        }
 
         response.setContentType("application/zip");
         response.setHeader("Content-Disposition", "attachment; filename=omop_" + runId + ".zip");
@@ -57,6 +65,7 @@ public class OmopExportService {
             writeObservationPeriodCsv(runId, zos);
         }
         log.info("ZIP export completed successfully for run {}", runId);
+        response.flushBuffer();
     }
 
     /** For safe CSV Handling,
@@ -140,7 +149,7 @@ public class OmopExportService {
         String header =
                 "measurement_id,person_id,measurement_concept_id," +
                         "measurement_date,measurement_datetime," +
-                        "value_as_number,unit_concept_id, measurement_type_concept_id" +
+                        "value_as_number,unit_concept_id,measurement_type_concept_id," +
                         "measurement_source_value\n";
 
         zos.write(header.getBytes(StandardCharsets.UTF_8));
@@ -229,6 +238,7 @@ public class OmopExportService {
                             safe(d.getDrugExposureStartDatetime()) + "," +
                             safe(d.getDrugExposureEndDate()) + "," +
                             safe(d.getDrugExposureEndDatetime()) + "," +
+                            safe(d.getDrugExposureTypeConceptId()) + "," +
                             safe(d.getProviderId()) + "," +
                             safe(d.getVisitOccurrenceId()) +"\n";
 

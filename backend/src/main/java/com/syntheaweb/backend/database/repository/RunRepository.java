@@ -1,6 +1,7 @@
 package com.syntheaweb.backend.database.repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import com.syntheaweb.backend.database.entity.User;
@@ -38,5 +39,4 @@ public interface RunRepository extends JpaRepository<Run, String> {
      * @param user The user whose runs should be deleted
      */
     void deleteByUser(User user);
-
 }

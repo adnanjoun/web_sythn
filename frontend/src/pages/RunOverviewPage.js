@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import patientService from "../services/runs/patientService";
 import downloadService from "../services/runs/downloadService";
 import favoritesService from "../services/runs/favoritesService";
+import omopService from "../services/runs/omopService";
 
 const RunOverviewPage = () => {
   const { user } = useContext(AuthContext);
@@ -94,6 +95,63 @@ const RunOverviewPage = () => {
     } catch (error) {
       console.error("Download error:", error);
       showSnackbar("Error downloading the file!", "error");
+    }
+  };
+
+  /*OMOP processing and conversion*/
+  const handleOmopProcess = async (runId) => {
+
+    const isReady = await checkRunHasData(runId);
+    if (!isReady) return;
+
+    try {
+
+      showSnackbar(
+          "OMOP conversion started...",
+          "info"
+      );
+
+      await omopService.processRun(runId);
+
+      showSnackbar(
+          "OMOP conversion completed.",
+          "success"
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+      showSnackbar(
+          "OMOP conversion failed.",
+          "error"
+      );
+    }
+  };
+
+  /*OMOP download*/
+  const handleOmopDownload = async (runId) => {
+
+    const isReady = await checkRunHasData(runId);
+    if (!isReady) return;
+
+    try {
+
+      showSnackbar(
+          "OMOP download started...",
+          "info"
+      );
+
+      await omopService.downloadOmopExport(runId);
+
+    } catch (error) {
+
+      console.error(error);
+
+      showSnackbar(
+          "OMOP download failed.",
+          "error"
+      );
     }
   };
 
@@ -238,6 +296,8 @@ const RunOverviewPage = () => {
                 isAdmin={isAdmin}
                 onDelete={openDeleteDialog}
                 onDownload={handleDownload}
+                onOmopProcess={handleOmopProcess}
+                onOmopDownload={handleOmopDownload}
                 onFavorite={handleFavorite}
                 onViewPatients={handleViewPatients}
                 runFavoriteStatus={runFavoriteStatus}

@@ -7,6 +7,7 @@ import com.syntheaweb.backend.database.repository.RunRepository;
 import com.syntheaweb.backend.service.FhirService;
 import com.syntheaweb.backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -15,7 +16,7 @@ import java.util.UUID;
 
 
 @RestController
-@RequestMapping("/omop")
+@RequestMapping("/api/omop")
 public class OmopIngestionController {
 
     @Autowired
@@ -38,7 +39,25 @@ public class OmopIngestionController {
         this.runRepository = runRepository;
     }
 
-    @PostMapping("/bundle")
+    @PostMapping("/process")
+    public ResponseEntity<String> processRun(
+            @RequestParam String runId
+    ) {
+
+        try {
+
+            fhirService.processRun(runId);
+
+            return ResponseEntity.ok("OMOP conversion successful");
+
+        } catch (Exception e) {
+
+            return ResponseEntity.internalServerError()
+                    .body("OMOP conversion failed: " + e.getMessage());
+        }
+    }
+
+    /*@PostMapping("/process")
     public String processBundle(@RequestBody String json, Principal principal) {
 
         String runId = UUID.randomUUID().toString();
@@ -63,17 +82,5 @@ public class OmopIngestionController {
         fhirService.processBundle(json, runId);
 
         return runId;
-    }
-    /**
-     * only for testing
-     */
-    @PostMapping("/test/patient")
-    public Person testPatient(@RequestBody String json) {
-        return fhirService.parseAndMapPatient(json);
-    }
-
-    @GetMapping("/persons/{id}")
-    public Person getPersonById(@PathVariable Long id) {
-        return fhirService.findPersonById(id);
-    }
+    }*/
 }

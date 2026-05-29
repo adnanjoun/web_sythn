@@ -9,9 +9,20 @@ import {
   FavoriteBorder,
   Favorite,
   Visibility,
+  SyncAlt,
+  FolderZip,
 } from "@mui/icons-material";
 
-const RunList = ({ runs, isAdmin, onDelete, onDownload, onFavorite, onViewPatients, runFavoriteStatus = {}, }) => {
+const RunList = ({
+                   runs,
+                   isAdmin,
+                   onDelete,
+                   onDownload,
+                   onOmopProcess,
+                   onOmopDownload,
+                   onFavorite,
+                   onViewPatients,
+                   runFavoriteStatus = {}, }) => {
   // anchorEl manages the position of the download menu
   const [anchorEl, setAnchorEl] = useState(null);
 
@@ -200,6 +211,22 @@ const RunList = ({ runs, isAdmin, onDelete, onDownload, onFavorite, onViewPatien
 
                     <mui.IconButton onClick={() => onViewPatients(run.runId)}>
                       <Visibility />
+                    </mui.IconButton>
+
+                    {/* OMOP CONVERSION */}
+                    <mui.IconButton
+                        onClick={() => onOmopProcess(run.runId)}
+                        title="Convert to OMOP"
+                    >
+                      <SyncAlt />
+                    </mui.IconButton>
+
+                    {/* OMOP DOWNLOAD */}
+                    <mui.IconButton
+                        onClick={() => onOmopDownload(run.runId)}
+                        title="Download OMOP"
+                    >
+                      <FolderZip />
                     </mui.IconButton>
 
                     <mui.IconButton
