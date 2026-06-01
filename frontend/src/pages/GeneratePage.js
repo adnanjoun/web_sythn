@@ -5,6 +5,7 @@ import axios from "axios";
 import { AuthContext } from "../AuthContext";
 import { useSnackbar } from "../components/SnackbarProvider";
 import Layout from "../components/layout/Layout";
+import omopService from "../services/runs/omopService";
 
 function GeneratePage() {
   const { showSnackbar } = useSnackbar();
@@ -22,6 +23,9 @@ function GeneratePage() {
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [generationTime, setGenerationTime] = useState(null);
+
+  /*For OMOP Conversion*/
+  const [omopConverted, setOmopConverted] = useState(false);
 
   /**
    * handleInput
@@ -170,6 +174,26 @@ function GeneratePage() {
     }
   };
 
+  /** handleOmopProcess
+   * Initiates the processing og the Omop conversion.
+   * */
+  const handleOmopProcess = async () => {
+    try {
+      await omopService.processRun(runID);
+      setOmopConverted(true);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleOmopDownload = async () => {
+    try {
+      await omopService.downloadOmopExport(runID);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   /**
    * handleReturn
    * Resets to the initial state or reloads the page.
@@ -197,6 +221,9 @@ function GeneratePage() {
         ageErrorMessage={ageErrorMessage}
         isPopulationSizeInvalid={isPopulationSizeInvalid}
         isFormInvalid={isFormInvalid}
+        onOmop={handleOmopProcess}
+        onOmopDownload={handleOmopDownload}
+        omopConverted={omopConverted}
       />
     </Layout>
   );

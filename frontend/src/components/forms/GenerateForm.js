@@ -17,6 +17,9 @@ function GenerateForm({
   ageErrorMessage,
   isPopulationSizeInvalid,
   isFormInvalid,
+                          onOmop,
+                          onOmopDownload,
+                          omopConverted,
 }) {
   const { populationSize, gender, minAge, maxAge, state, city } =
     generateOptions;
@@ -247,22 +250,38 @@ function GenerateForm({
               </mui.List>
             </mui.Box>
 
-            <mui.Box sx={{ display: "flex", gap: 4, justifyContent: "center" }}>
-              <mui.Button
-                onClick={() => onDownload("csv")}
-                variant="contained"
-                disabled={downloading}
-              >
-                Download CSV
-              </mui.Button>
-              <mui.Button
-                onClick={() => onDownload("fhir")}
-                variant="contained"
-                disabled={downloading}
-              >
-                Download FHIR
-              </mui.Button>
-            </mui.Box>
+              <mui.Box sx={{ display: "flex", gap: 2, justifyContent: "center", flexWrap: "wrap" }}>
+
+                  <mui.Button
+                      onClick={() => onDownload("csv")}
+                      variant="contained"
+                      disabled={downloading}
+                  >
+                      Download CSV
+                  </mui.Button>
+
+                  <mui.Button
+                      onClick={() => onDownload("fhir")}
+                      variant="contained"
+                      disabled={downloading}
+                  >
+                      Download FHIR
+                  </mui.Button>
+
+                  {/* OMOP SMART BUTTON */}
+                  <mui.Button
+                      onClick={() =>
+                          omopConverted
+                              ? onOmopDownload()
+                              : onOmop()
+                      }
+                      variant="contained"
+                      color={omopConverted ? "success" : "secondary"}
+                  >
+                      {omopConverted ? "Download OMOP" : "Generate OMOP"}
+                  </mui.Button>
+              </mui.Box>
+
           </mui.Box>
         </mui.Box>
       )}

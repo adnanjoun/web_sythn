@@ -213,20 +213,17 @@ const RunList = ({
                       <Visibility />
                     </mui.IconButton>
 
-                    {/* OMOP CONVERSION */}
+                    {/*OMOP smart button for convert/download
+                    changing according to omopConverted flag*/}
                     <mui.IconButton
-                        onClick={() => onOmopProcess(run.runId)}
-                        title="Convert to OMOP"
+                        onClick={() =>
+                            run.omopConverted
+                                ? onOmopDownload(run.runId)
+                                : onOmopProcess(run.runId)
+                        }
+                        title={run.omopConverted ? "Download OMOP" : "Generate OMOP"}
                     >
-                      <SyncAlt />
-                    </mui.IconButton>
-
-                    {/* OMOP DOWNLOAD */}
-                    <mui.IconButton
-                        onClick={() => onOmopDownload(run.runId)}
-                        title="Download OMOP"
-                    >
-                      <FolderZip />
+                      {run.omopConverted ? <FolderZip /> : <SyncAlt />}
                     </mui.IconButton>
 
                     <mui.IconButton
