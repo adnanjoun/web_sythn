@@ -15,7 +15,7 @@ import java.util.zip.ZipOutputStream;
 @Service
 public class StorageService {
 
-    private static final String BASE_OUTPUT_DIRECTORY = "/synthea/output/";
+    private static final String BASE_OUTPUT_DIRECTORY = "../synthea/output/";
     private static final String FORMAT_CSV = "csv";
     private static final String FORMAT_FHIR = "fhir";
 

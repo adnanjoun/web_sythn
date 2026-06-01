@@ -23,7 +23,7 @@ import java.util.Optional;
 @Service
 public class SyntheaService {
 
-    private static final String SYNTHEA_DIRECTORY = "/synthea/";
+    private static final String SYNTHEA_DIRECTORY = "../synthea";
 
     @Autowired
     private PatientRepository patientRepository;
@@ -34,7 +34,9 @@ public class SyntheaService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public void generateSyntheticData(String runId, Integer populationSize, String gender, Integer minAge, Integer maxAge, String state, String city) throws IOException, InterruptedException {
-        ProcessBuilder processBuilder = new ProcessBuilder("./run_synthea");
+        //ProcessBuilder processBuilder = new ProcessBuilder("./run_synthea");
+        ProcessBuilder processBuilder =
+                new ProcessBuilder("cmd.exe", "/c", "run_synthea.bat");
         addPopulationParameter(processBuilder, populationSize);
         addGenderParameter(processBuilder, gender);
         addAgeParameter(processBuilder, minAge, maxAge);
@@ -42,7 +44,10 @@ public class SyntheaService {
 
         processBuilder.directory(new File(SYNTHEA_DIRECTORY));
         processBuilder.redirectErrorStream(true);
+
+        System.out.println("Starting Synthea...");
         Process process = processBuilder.start();
+        System.out.println("Process started.");
 
         /*
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
