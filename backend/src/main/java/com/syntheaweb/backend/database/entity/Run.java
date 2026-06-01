@@ -37,7 +37,10 @@ public class Run {
     @Column(nullable = true)
     private Integer maxAge;
 
-    public Run(String runId, User user, LocalDateTime createdAt, String state, String city, String gender, Integer populationSize, Integer minAge, Integer maxAge) {
+    @Column(nullable = false)
+    private boolean omopConverted = false;
+
+    public Run(String runId, User user, LocalDateTime createdAt, String state, String city, String gender, Integer populationSize, Integer minAge, Integer maxAge, boolean omopConverted) {
         this.runId = runId;
         this.user = user;
         this.createdAt = createdAt;
@@ -47,6 +50,7 @@ public class Run {
         this.populationSize = populationSize;
         this.minAge = minAge;
         this.maxAge = maxAge;
+        this.omopConverted = omopConverted;
     }
 
     public Integer getMinAge() {
@@ -123,5 +127,13 @@ public class Run {
 
     public void setPopulationSize(Integer populationSize) {
         this.populationSize = populationSize;
+    }
+
+    public boolean isOmopConverted() {
+        return omopConverted;
+    }
+
+    public void setOmopConverted(boolean omopConverted) {
+        this.omopConverted = omopConverted;
     }
 }

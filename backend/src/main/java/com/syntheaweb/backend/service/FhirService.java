@@ -108,6 +108,9 @@ public class FhirService {
             processBundle(bundle, run);
         }
 
+        run.setOmopConverted(true);
+        runRepository.save(run);
+
         log.info("Finished OMOP processing for run {}", runId);
     }
 

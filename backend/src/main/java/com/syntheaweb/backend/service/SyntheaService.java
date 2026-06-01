@@ -43,20 +43,22 @@ public class SyntheaService {
         addLocationParameter(processBuilder, state, city);
 
         processBuilder.directory(new File(SYNTHEA_DIRECTORY));
+
+        //logging handled by file (safe)
+        processBuilder.redirectOutput(new File("synthea.log"));
         processBuilder.redirectErrorStream(true);
 
         System.out.println("Starting Synthea...");
         Process process = processBuilder.start();
         System.out.println("Process started.");
 
-        /*
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+
+        /*try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 System.out.println(line);
             }
-        }
-        */
+        }*/
 
         int exitCode = process.waitFor();
         if (exitCode != 0) {

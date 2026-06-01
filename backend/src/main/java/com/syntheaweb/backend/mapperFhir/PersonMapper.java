@@ -23,8 +23,9 @@ public class PersonMapper {
         Person person = new Person();
 
         if (patient.getBirthDate() != null) {
-            LocalDate date = patient.getBirthDate().toInstant()
-                    .atZone(ZoneId.of("UTC"))
+            LocalDate date = patient.getBirthDate()
+                    .toInstant()
+                    .atZone(ZoneId.systemDefault())
                     .toLocalDate();
 
             person.setYearOfBirth(date.getYear());

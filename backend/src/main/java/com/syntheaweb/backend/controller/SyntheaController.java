@@ -92,6 +92,9 @@ public class SyntheaController {
             run.setState(requestBody.getState());
             run.setCity(requestBody.getCity());
 
+            //For Omop conversion
+            run.setOmopConverted(false);
+
             runRepository.save(run);
 
             // Generate and return the generated run ID
