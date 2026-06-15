@@ -20,6 +20,7 @@ function GenerateForm({
                           onOmop,
                           onOmopDownload,
                           omopConverted,
+  maxPopulationSize
 }) {
   const { populationSize, gender, minAge, maxAge, state, city } =
     generateOptions;
@@ -53,7 +54,7 @@ function GenerateForm({
               error={isPopulationSizeInvalid}
               helperText={
                 isPopulationSizeInvalid
-                  ? "Population size must be greater than 0"
+                  ? `Population size must be between 0 and ${maxPopulationSize}`
                   : ""
               }
               fullWidth
@@ -231,20 +232,19 @@ function GenerateForm({
               variant="h3"
               sx={{ textAlign: "center", fontWeight: "bold" }}
             >
-              Done!
+              Request submitted successfully!
             </mui.Typography>
 
             <mui.Box sx={{ textAlign: "left" }}>
               <mui.List sx={{ listStyleType: "disc" }}>
                 <mui.ListItem sx={{ display: "list-item", paddingLeft: 0 }}>
                   <mui.Typography variant="body1">
-                    Synthetic data generation finished in {generationTime}{" "}
-                    seconds.
+                    Synthetic data generation is beeing generated. Your request is beeing qued. You can see the current status on the run oververview page.
                   </mui.Typography>
                 </mui.ListItem>
                 <mui.ListItem sx={{ display: "list-item", paddingLeft: 0 }}>
                   <mui.Typography variant="body1">
-                    Generated population size: {populationSize || 1}.
+                    Generating population size: {populationSize || 1}.
                   </mui.Typography>
                 </mui.ListItem>
               </mui.List>

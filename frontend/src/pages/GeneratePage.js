@@ -75,9 +75,11 @@ function GeneratePage() {
    * isPopulationSizeInvalid
    * True if populationSize is not empty AND <= 0.
    */
+  const maxPopulationSz = 10*1000;
+  const nPopulationSz = parseInt(generateOptions.populationSize);
   const isPopulationSizeInvalid =
     generateOptions.populationSize !== "" &&
-    parseInt(generateOptions.populationSize) <= 0;
+      0 < nPopulationSz  &&  nPopulationSz > maxPopulationSz;
 
   /**
    * isFormInvalid
@@ -94,7 +96,6 @@ function GeneratePage() {
     setLoading(true);
 
     const token = localStorage.getItem("token");
-    const startTime = Date.now();
 
     try {
       const response = await axios.post(
@@ -118,12 +119,8 @@ function GeneratePage() {
       }
 
       setRunID(response.data.runID);
-
-      const endTime = Date.now();
-      const elapsedTime = ((endTime - startTime) / 1000).toFixed(2);
-      setGenerationTime(elapsedTime);
       showSnackbar(
-        "Synthetic data generated and saved successfully!",
+        "Synthetic data generation started successfully! View the current status on the run overview page.",
         "success"
       );
     } catch (error) {
