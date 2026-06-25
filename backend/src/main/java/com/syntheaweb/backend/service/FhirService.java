@@ -2,6 +2,7 @@ package com.syntheaweb.backend.service;
 
 import ca.uhn.fhir.context.FhirContext;
 import com.syntheaweb.backend.database.entity.Run;
+import com.syntheaweb.backend.database.entity.RunStatus;
 import com.syntheaweb.backend.database.entity.omop.*;
 import com.syntheaweb.backend.database.entity.omop.Person;
 import com.syntheaweb.backend.database.repository.RunRepository;
@@ -85,6 +86,17 @@ public class FhirService {
         log.info("Starting parsing FHIR bundle.");
         FhirContext ctx = FhirContext.forR4();
         return (Bundle) ctx.newJsonParser().parseResource(json);
+    }
+
+    public void processRunSafely(String runId) throws IOException {
+        Run run = runRepository.findById(runId)
+                .orElseThrow();
+
+        if (run.getStatus() != RunStatus.SUCCESS) {
+            throw new IllegalStateException("Run not ready");
+        }
+
+        processRun(runId);
     }
 
     public void processRun(String runId) throws IOException {

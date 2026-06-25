@@ -8,18 +8,13 @@ function GenerateForm({
   onInputChange,
   onSubmit,
   runID,
-  onDownload,
   onReturn,
   loading,
-  downloading,
-  generationTime,
+                          navigateRunOverview,
   isAgeInvalid,
   ageErrorMessage,
   isPopulationSizeInvalid,
   isFormInvalid,
-                          onOmop,
-                          onOmopDownload,
-                          omopConverted,
   maxPopulationSize
 }) {
   const { populationSize, gender, minAge, maxAge, state, city } =
@@ -250,35 +245,12 @@ function GenerateForm({
               </mui.List>
             </mui.Box>
 
-              <mui.Box sx={{ display: "flex", gap: 2, justifyContent: "center", flexWrap: "wrap" }}>
-
+              <mui.Box sx={{ display: "flex", gap: 4, justifyContent: "center" }}>
                   <mui.Button
-                      onClick={() => onDownload("csv")}
+                      onClick={navigateRunOverview}
                       variant="contained"
-                      disabled={downloading}
                   >
-                      Download CSV
-                  </mui.Button>
-
-                  <mui.Button
-                      onClick={() => onDownload("fhir")}
-                      variant="contained"
-                      disabled={downloading}
-                  >
-                      Download FHIR
-                  </mui.Button>
-
-                  {/* OMOP SMART BUTTON */}
-                  <mui.Button
-                      onClick={() =>
-                          omopConverted
-                              ? onOmopDownload()
-                              : onOmop()
-                      }
-                      variant="contained"
-                      color={omopConverted ? "success" : "secondary"}
-                  >
-                      {omopConverted ? "Download OMOP" : "Generate OMOP"}
+                      Go To Run Overview
                   </mui.Button>
               </mui.Box>
 

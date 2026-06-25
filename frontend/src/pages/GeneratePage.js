@@ -2,10 +2,9 @@ import React, { useState, useContext } from "react";
 import GenerateForm from "../components/forms/GenerateForm";
 import * as mui from "@mui/material";
 import axios from "axios";
-import { AuthContext } from "../AuthContext";
+import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "../components/SnackbarProvider";
 import Layout from "../components/layout/Layout";
-import omopService from "../services/runs/omopService";
 
 function GeneratePage() {
   const { showSnackbar } = useSnackbar();
@@ -21,11 +20,9 @@ function GeneratePage() {
 
   const [runID, setRunID] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [downloading, setDownloading] = useState(false);
-  const [generationTime, setGenerationTime] = useState(null);
 
-  /*For OMOP Conversion*/
-  const [omopConverted, setOmopConverted] = useState(false);
+  const navigate = useNavigate();
+  const navigateRunOverview = () => navigate("/runs");
 
   /**
    * handleInput
@@ -129,67 +126,8 @@ function GeneratePage() {
       setLoading(false);
     }
   };
+/*
 
-  /**
-   * handleDownload
-   * Initiates file download for the given format.
-   * Displays an info snackbar on start or error snackbar if it fails.
-   */
-  const handleDownload = async (format) => {
-    if (!runID) {
-      showSnackbar("No Run available for download!", "error");
-      return;
-    }
-
-    setDownloading(true);
-    showSnackbar(`Download of ${format.toUpperCase()} started.`, "info");
-
-    const token = localStorage.getItem("token");
-    try {
-      const response = await fetch(
-        `/api/synthea/download?runID=${runID}&format=${format}`,
-        {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Download error: ${response.statusText}`);
-      }
-
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = `${runID}_${format}.zip`;
-      link.click();
-    } catch (error) {
-      showSnackbar("Error downloading the file!", "error");
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  /** handleOmopProcess
-   * Initiates the processing og the Omop conversion.
-   * */
-  const handleOmopProcess = async () => {
-    try {
-      await omopService.processRun(runID);
-      setOmopConverted(true);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleOmopDownload = async () => {
-    try {
-      await omopService.downloadOmopExport(runID);
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   /**
    * handleReturn
@@ -205,22 +143,18 @@ function GeneratePage() {
         Generate a synthetic population
       </mui.Typography>
       <GenerateForm
-        generateOptions={generateOptions}
-        onInputChange={handleInput}
-        onSubmit={handleGenerate}
-        runID={runID}
-        onDownload={handleDownload}
-        onReturn={handleReturn}
-        loading={loading}
-        downloading={downloading}
-        generationTime={generationTime}
-        isAgeInvalid={isAgeInvalid}
-        ageErrorMessage={ageErrorMessage}
-        isPopulationSizeInvalid={isPopulationSizeInvalid}
-        isFormInvalid={isFormInvalid}
-        onOmop={handleOmopProcess}
-        onOmopDownload={handleOmopDownload}
-        omopConverted={omopConverted}
+          generateOptions={generateOptions}
+          onInputChange={handleInput}
+          onSubmit={handleGenerate}
+          runID={runID}
+          onReturn={handleReturn}
+          loading={loading}
+          isAgeInvalid={isAgeInvalid}
+          ageErrorMessage={ageErrorMessage}
+          isPopulationSizeInvalid={isPopulationSizeInvalid}
+          isFormInvalid={isFormInvalid}
+          navigateRunOverview={navigateRunOverview}
+          maxPopulationSize={maxPopulationSz}
       />
     </Layout>
   );
