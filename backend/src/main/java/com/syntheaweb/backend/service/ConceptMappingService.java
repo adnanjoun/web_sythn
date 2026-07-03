@@ -1,9 +1,15 @@
 package com.syntheaweb.backend.service;
 
+import com.syntheaweb.backend.mapperFhir.ConceptMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -11,6 +17,10 @@ public class ConceptMappingService {
 
     private static final Logger log =
             LoggerFactory.getLogger(ConceptMappingService.class);
+
+    public ConceptMappingService() {
+        loadMappings();
+    }
 
     // Type Concepts
     public static final int EHR_RECORD = 32817;
@@ -22,36 +32,59 @@ public class ConceptMappingService {
     public static final int PHYSICIAN_ADMINISTERED_DRUG = 38000180;
 
 
-    private final Map<String, Integer> mappings = Map.ofEntries(
+    private final Map<String, Integer> mappings = new HashMap<>();
 
-            // Conditions
-            Map.entry("http://snomed.info/sct|44054006", 201826), // Diabetes mellitus type 2
-            Map.entry("http://snomed.info/sct|38341003", 319835), // Hypertension
-            Map.entry("http://snomed.info/sct|195967001", 255848), // Asthma
-            Map.entry("http://snomed.info/sct|233604007", 433736), // Pneumonia
-            Map.entry("http://snomed.info/sct|6142004", 441840), // Influenza
+    private void loadMappings() {
 
-            // Measurements
-            Map.entry("http://loinc.org|8867-4", 3027018), // Heart rate
-            Map.entry("http://loinc.org|8480-6", 3004249), // Systolic BP
-            Map.entry("http://loinc.org|8462-4", 3012888), // Diastolic BP
-            Map.entry("http://loinc.org|8310-5", 3020891), // Body temperature
-            Map.entry("http://loinc.org|29463-7", 3036277), // Body weight
-            Map.entry("http://loinc.org|8302-2", 3038553), // Body height
+        try (InputStream input =
+                     getClass().getClassLoader()
+                             .getResourceAsStream("concept-mappings.csv")) {
 
-            // Encounter / VisitOccurrence
-            Map.entry("http://terminology.hl7.org/CodeSystem/v3-ActCode|IMP", 9201), // Inpatient
-            Map.entry("http://terminology.hl7.org/CodeSystem/v3-ActCode|AMB", 9202), // Outpatient
-            Map.entry("http://terminology.hl7.org/CodeSystem/v3-ActCode|EMER", 9203), // Emergency Room
-            Map.entry("http://terminology.hl7.org/CodeSystem/v3-ActCode|VR", 9204), // Virtual visit
+            if (input == null) {
+                throw new RuntimeException(
+                        "Could not find resource concept-mappings.csv"
+                );
+            }
 
-            // Medications
-            Map.entry("http://www.nlm.nih.gov/research/umls/rxnorm|860975", 860975), // Metformin
-            Map.entry("http://www.nlm.nih.gov/research/umls/rxnorm|617314", 617314), // Simvastatin
-            Map.entry("http://www.nlm.nih.gov/research/umls/rxnorm|1049630", 1049630), // Lisinopril
-            Map.entry("http://www.nlm.nih.gov/research/umls/rxnorm|197361", 197361), // Amlodipine
-            Map.entry("http://www.nlm.nih.gov/research/umls/rxnorm|83367", 83367) // Ibuprofen
-    );
+            BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(input));
+
+            // skip header
+            reader.readLine();
+
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+
+                if (line.isBlank()) {
+                    continue;
+                }
+
+                String[] values = line.split(",");
+
+                if (values.length != 3) {
+                    log.warn("Skipping invalid mapping: {}", line);
+                    continue;
+                }
+
+                ConceptMapping mapping = new ConceptMapping(
+                        values[0],
+                        values[1],
+                        Integer.parseInt(values[2])
+                );
+
+                mappings.put(
+                        mapping.sourceSystem() + "|" + mapping.sourceCode(),
+                        mapping.conceptId()
+                );
+            }
+
+            log.info("Loaded {} concept mappings.", mappings.size());
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load concept mappings", e);
+        }
+    }
 
     public int resolve(String system, String code) {
 
