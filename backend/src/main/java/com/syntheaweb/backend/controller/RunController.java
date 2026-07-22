@@ -10,56 +10,18 @@ import com.syntheaweb.backend.dto.PatientDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.syntheaweb.backend.database.entity.Patient;
-import com.syntheaweb.backend.service.StorageService;
-
 import java.util.List;
 import java.util.Optional;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.Path;
 import java.io.IOException;
-import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.ArrayList;
-
-
-import java.io.*;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
-import java.nio.file.Files;
-import java.nio.charset.StandardCharsets;
-
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.Period;
-import java.time.ZoneId;
-
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
 import com.syntheaweb.backend.database.repository.PatientRepository;
 import com.syntheaweb.backend.database.repository.RunRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Arrays;
-import java.util.Collections;
-
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import com.syntheaweb.backend.dto.PatientDto;
-
-import org.springframework.stereotype.Service;
 
 /**
  * Controller for managing synthetic data runs

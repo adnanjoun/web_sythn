@@ -1,6 +1,5 @@
 package com.syntheaweb.backend.controller;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -8,33 +7,21 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.zip.ZipOutputStream;
-import java.util.zip.ZipEntry;
-import java.nio.file.Files;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-
 import com.syntheaweb.backend.dto.SyntheaApiResponse;
 import com.syntheaweb.backend.dto.SyntheaParameterBody;
 import com.syntheaweb.backend.service.SyntheaService;
 import com.syntheaweb.backend.database.repository.RunRepository;
 import com.syntheaweb.backend.database.repository.UserRepository;
-import com.syntheaweb.backend.database.repository.PatientRepository;
 import com.syntheaweb.backend.database.entity.Run;
 import com.syntheaweb.backend.database.entity.User;
 import com.syntheaweb.backend.service.StorageService;
-import com.syntheaweb.backend.database.entity.Patient;
-
 import jakarta.servlet.http.HttpServletResponse;
 
 /**

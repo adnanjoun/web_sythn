@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import com.syntheaweb.backend.database.entity.Run;
-
 @Entity
 @Table(name = "patients")
 public class Patient {

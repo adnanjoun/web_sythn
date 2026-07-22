@@ -1,4 +1,17 @@
 services:
+  ai-service:
+    build:
+      context: ./ai_service
+      dockerfile: Dockerfile
+    ports:
+      - "5050:5000"
+    environment:
+      MEDGEMMA_MODEL_PATH: /models/medgemma
+    volumes:
+      - ./ai_service/models/medgemma:/models/medgemma:ro
+    networks:
+      - syntheanetwork
+
   backend:
     build:
       context: ./backend
@@ -13,9 +26,11 @@ services:
       SYNTHEA_DIRECTORY: ${SYNTHEA_DIRECTORY}
       SYNTHEA_OUTPUT_DIRECTORY: ${SYNTHEA_OUTPUT_DIRECTORY}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      AI_SERVICE_URL: http://ai-service:5000
     depends_on:
       - db
       - synthea
+      - ai-service
     volumes:
       - ./synthea:/synthea
       #isolates gradle cache to prevent gradle lock

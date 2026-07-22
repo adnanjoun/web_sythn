@@ -10,7 +10,7 @@ axios.interceptors.response.use(
     const status = error.response?.status;
 
     // Check if the user is on the login page
-    const isOnLoginPage = window.location.pathname === "/login";
+    const isOnLoginPage = window.location.pathname.endsWith("/login");
 
     if (
       (status === 401 || status === 403) &&
@@ -28,7 +28,7 @@ axios.interceptors.response.use(
         isLogoutInProgress = false;
       }, 3000);
 
-      window.location.href = "/login";
+      window.location.href = "/syntheaweb//login";
     }
 
     return Promise.reject(error);

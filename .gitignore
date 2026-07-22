@@ -7,3 +7,9 @@ node_modules
 .idea/
 *.iml
 
+# AI models (to large for git)
+ai_service/models/*
+!ai_service/models/.gitkeep
+
+ai_service/venv/
+.venv/

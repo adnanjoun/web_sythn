@@ -1,7 +1,6 @@
 package com.syntheaweb.backend.database.repository;
 
 import com.syntheaweb.backend.database.entity.Patient;
-import com.syntheaweb.backend.dto.PatientDto;
 import com.syntheaweb.backend.dto.PatientCountResult;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,12 +11,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Repository
 public interface PatientRepository extends JpaRepository<Patient, Long>, JpaSpecificationExecutor<Patient> {
 
     Page<Patient> findByRun_RunId(String runId, Pageable pageable);
+
+    Optional<Patient> findByPatientIdAndRun_RunId(String patientId, String runId);
 
     @Query("SELECT DISTINCT p.location FROM Patient p WHERE p.run.runId = :runId ORDER BY p.location ASC")
     List<String> findDistinctLocationsByRunId(@Param("runId") String runId);

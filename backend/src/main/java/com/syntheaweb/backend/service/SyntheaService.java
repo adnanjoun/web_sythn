@@ -8,11 +8,11 @@ import com.syntheaweb.backend.database.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.syntheaweb.backend.service.StorageService;
+import org.springframework.scheduling.annotation.Async; 
+import com.syntheaweb.backend.database.repository.RunRepository; 
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Arrays;

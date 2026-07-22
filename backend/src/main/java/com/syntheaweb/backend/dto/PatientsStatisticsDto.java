@@ -1,10 +1,7 @@
 package com.syntheaweb.backend.dto;
 
 
-import java.util.List;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.HashMap;
 
 public class PatientsStatisticsDto {
     private Long populationSize;

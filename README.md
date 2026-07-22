@@ -8,9 +8,10 @@ SyntheaWeb is a platform developed for the Medical University of Vienna to simpl
 
 ## Features
 
-- **User-Friendly Interface** – Generate synthetic healthcare data via an intuitive web interface.
-- **Support for Research & Education** – Promote advancements in healthcare and data science while ensuring compliance with privacy regulations.
-- **Fully Containerized Deployment** – Runs via Docker without requiring manual installation of dependencies.
+- **User-Friendly Interface** - Generate synthetic healthcare data via an intuitive web interface.
+- **Support for Research & Education** - Promote advancements in healthcare and data science while ensuring compliance with privacy regulations.
+- **Fully Containerized Deployment** - Runs via Docker without requiring manual installation of dependencies.
+- **AI-Powered Review** - Review generated medical data with a locally hosted AI model.
 
 ## Installation & Setup
 
@@ -34,8 +35,21 @@ For Docker-Compose: [https://docs.docker.com/compose/install/](https://docs.dock
    git clone https://github.com/adnanjoun/web_sythn.git
    cd web_sythn
    ```
-3. **(Optional) Change credentials in the included .env file**
-4. **Start the application:**
+3. **Download the AI model required for the AI Review feature:**
+
+   AI models are too large to be stored and comitted directly in Git. Install the Hugging Face CLI, authenticate and download the model to the expected local directory:
+
+   ```sh
+   pip install huggingface_hub
+   hf auth login
+   hf download google/medgemma-1.5-4b-it --local-dir ./ai_service/models/medgemma
+   ```
+
+   Follow the same process when adding or replacing AI models, adjusting the model identifier and local directory as needed.
+
+4. **(Optional) Change credentials in the included .env file**
+
+5. **Start the application:**
 
    ```sh
    docker-compose up --build
@@ -43,7 +57,7 @@ For Docker-Compose: [https://docs.docker.com/compose/install/](https://docs.dock
 
    The first build takes a few minutes.
 
-5. **Open the application.**
+6. **Open the application.**
 
    Once all containers are running and it shows:
 
@@ -52,9 +66,9 @@ For Docker-Compose: [https://docs.docker.com/compose/install/](https://docs.dock
    ```
 
    open a browser and visit:
-   [http://localhost:3000](http://localhost:3000)
+   [http://localhost:3000/syntheaweb](http://localhost:3000/syntheaweb)
 
-6. **Now you can register and start generating!**
+7. **Now you can register and start generating!**
 
 ---
 

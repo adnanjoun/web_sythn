@@ -5,7 +5,6 @@ import com.syntheaweb.backend.database.repository.PatientRepository;
 import com.syntheaweb.backend.database.specification.PatientSpecifications;
 import com.syntheaweb.backend.dto.PatientDto;
 import com.syntheaweb.backend.dto.PatientsStatisticsDto;
-import com.syntheaweb.backend.dto.PatientCountResult;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,10 +15,7 @@ import com.syntheaweb.backend.service.StorageService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Map;

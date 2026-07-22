@@ -5,6 +5,7 @@ const designTokens = {
     background: {
       default: "#2c2c2c",
       secondary: "#3c3c3c",
+      ternary: "#4c4c4c",
     },
     primary: {
       main: "#03a78e",
