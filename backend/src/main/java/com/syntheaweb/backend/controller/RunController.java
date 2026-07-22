@@ -22,6 +22,7 @@ import com.syntheaweb.backend.database.repository.RunRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.data.domain.Pageable;
+import java.security.Principal;
 
 /**
  * Controller for managing synthetic data runs
@@ -56,15 +57,15 @@ public class RunController {
         this.jwtUtil = jwtUtil;
     }
 
-    /**
+/**
      * get all runs associated with the authenticated user
      *
-     * @param token The JWT token provided in the Authorization header.
+     * @param principal The authenticated user object provided by Spring Security.
      * @return ResponseEntity containing the list of runs for the user, or an error status
      */
     @GetMapping
-    public ResponseEntity<List<Run>> getUserRuns(@RequestHeader("Authorization") String token) {
-        return getAuthenticatedUser(token)
+    public ResponseEntity<List<Run>> getUserRuns(Principal principal) {
+        return getAuthenticatedUser(principal)
                 .map(user -> ResponseEntity.ok(runService.getRunsByUser(user)))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
@@ -72,12 +73,12 @@ public class RunController {
     /**
      * get all runs in the system (as admin).
      *
-     * @param token The JWT token provided in the Authorization header.
+     * @param principal The authenticated user object provided by Spring Security.
      * @return ResponseEntity containing the list of all runs, or an error status
      */
     @GetMapping("/admin")
-    public ResponseEntity<List<Run>> getAllRuns(@RequestHeader("Authorization") String token) {
-        return getAuthenticatedUser(token)
+    public ResponseEntity<List<Run>> getAllRuns(Principal principal) {
+        return getAuthenticatedUser(principal)
                 .filter(user -> ROLE_ADMIN.equals(user.getRole()))
                 .map(user -> ResponseEntity.ok(runService.getAllRuns()))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.FORBIDDEN).build());
@@ -87,12 +88,12 @@ public class RunController {
      * Deletes a run by its ID
      *
      * @param runId The ID of the run to delete
-     * @param token The JWT token provided in the Authorization header.
+     * @param principal The authenticated user object provided by Spring Security.
      * @return ResponseEntity returning the result of the delete operation
      */
     @DeleteMapping("/delete/{runId}")
-    public ResponseEntity<Void> deleteRun(@PathVariable String runId, @RequestHeader("Authorization") String token) {
-        Optional<User> authenticatedUser = getAuthenticatedUser(token);
+    public ResponseEntity<Void> deleteRun(@PathVariable String runId, Principal principal) {
+        Optional<User> authenticatedUser = getAuthenticatedUser(principal);
 
         if (authenticatedUser.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -113,14 +114,14 @@ public class RunController {
     }
 
     /**
-     * Extracts the authenticated user from the provided JWT token
+     * Extracts the authenticated user from the provided Principal
      *
-     * @param token The JWT token provided in the Authorization header.
+     * @param principal The authenticated user object.
      * @return An Optional containing the authenticated user, or empty if user not found
      */
-    private Optional<User> getAuthenticatedUser(String token) {
-        String username = jwtUtil.extractUsername(token.replace("Bearer ", "").trim());
-        return userRepository.findByUsername(username);
+    private Optional<User> getAuthenticatedUser(Principal principal) {
+        if (principal == null) return Optional.empty();
+        return userRepository.findByUsername(principal.getName());
     }
 
     @GetMapping("/patients")
