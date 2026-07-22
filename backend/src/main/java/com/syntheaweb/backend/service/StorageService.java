@@ -11,7 +11,7 @@ import java.util.zip.ZipOutputStream;
 @Service
 public class StorageService {
 
-    private static final String BASE_OUTPUT_DIRECTORY = "/synthea/output/";
+    private static final String BASE_OUTPUT_DIRECTORY = "../synthea/output/";
     private static final String FORMAT_CSV = "csv";
     private static final String FORMAT_FHIR = "fhir";
 
@@ -156,5 +156,35 @@ public class StorageService {
             }
             file.delete();
         }
+    }
+
+    /** Necessary for OMOP conversion
+     * To read all patient json files from the run
+     * parse each file as a bundle
+     * and process all bundles*/
+    public List<String> readAllFhirBundles(String runId) throws IOException {
+
+        File runDir = getRunDirectory(runId, FORMAT_FHIR);
+
+        if (!runDir.exists() || !runDir.isDirectory()) {
+            return Collections.emptyList();
+        }
+
+        File[] files = runDir.listFiles((dir, name) ->
+                name.endsWith(".json")
+        );
+
+        if (files == null || files.length == 0) {
+            return Collections.emptyList();
+        }
+
+        List<String> bundles = new ArrayList<>();
+
+        for (File file : files) {
+            String json = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+            bundles.add(json);
+        }
+
+        return bundles;
     }
 }

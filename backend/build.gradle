@@ -31,6 +31,10 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
+	//for fhir to omop conversion
+	implementation 'ca.uhn.hapi.fhir:hapi-fhir-base:6.10.0'
+	implementation 'ca.uhn.hapi.fhir:hapi-fhir-structures-r4:6.10.0'
+
 }
 
 tasks.named('test') {

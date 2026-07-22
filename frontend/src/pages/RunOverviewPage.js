@@ -13,6 +13,7 @@ import { useNavigate } from "react-router-dom";
 import patientService from "../services/runs/patientService";
 import downloadService from "../services/runs/downloadService";
 import favoritesService from "../services/runs/favoritesService";
+import omopService from "../services/runs/omopService";
 
 const RunOverviewPage = () => {
   const { user } = useContext(AuthContext);
@@ -60,8 +61,9 @@ const RunOverviewPage = () => {
 
 
 
-  const openDeleteDialog = (runId) => {
-    setRunToDelete(runId);
+  const openDeleteDialog = (run) => {
+    if (!checkRunHasData(run)) return;
+    setRunToDelete(run.runId);
     setDeleteDialogOpen(true);
   };
 
@@ -83,17 +85,72 @@ const RunOverviewPage = () => {
     }
   };
 
-  const handleDownload = async (runId, format) => {
+  const handleDownload = async (run, format) => {
+    if (!checkRunHasData(run)) return;
+
+    showSnackbar(`Download of ${format.toUpperCase()} started.`, "info");
+    try {
+      await downloadService.downloadRunExport(run.runId, format);
+    } catch (error) {
+      console.error("Download error:", error);
+      showSnackbar("Error downloading the file!", "error");
+    }
+  };
+
+  /*OMOP processing and conversion*/
+  const handleOmopProcess = async (runId) => {
 
     const isReady = await checkRunHasData(runId);
     if (!isReady) return;
 
-    showSnackbar(`Download of ${format.toUpperCase()} started.`, "info");
     try {
-      await downloadService.downloadRunExport(runId, format);
+
+      showSnackbar(
+          "OMOP conversion started...",
+          "info"
+      );
+
+      await omopService.processRun(runId);
+
+      showSnackbar(
+          "OMOP conversion completed.",
+          "success"
+      );
+
     } catch (error) {
-      console.error("Download error:", error);
-      showSnackbar("Error downloading the file!", "error");
+
+      console.error(error);
+
+      showSnackbar(
+          "OMOP conversion failed.",
+          "error"
+      );
+    }
+  };
+
+  /*OMOP download*/
+  const handleOmopDownload = async (runId) => {
+
+    const isReady = await checkRunHasData(runId);
+    if (!isReady) return;
+
+    try {
+
+      showSnackbar(
+          "OMOP download started...",
+          "info"
+      );
+
+      await omopService.downloadOmopExport(runId);
+
+    } catch (error) {
+
+      console.error(error);
+
+      showSnackbar(
+          "OMOP download failed.",
+          "error"
+      );
     }
   };
 
@@ -159,20 +216,19 @@ const RunOverviewPage = () => {
     }
   };
 
-  const handleFavorite = async (runId) => {
-    const isReady = await checkRunHasData(runId);
-    if (!isReady) return;
+  const handleFavorite = async (run) => {
+    if (!checkRunHasData(run)) return;
 
-    const currentStatus = runFavoriteStatus[runId] || "none";
+    const currentStatus = runFavoriteStatus[run.runId] || "none";
 
     if (currentStatus === "full") {
-      await removeAllFavoritesForRun(runId);
+      await removeAllFavoritesForRun(run.runId);
 
     } else if (currentStatus === "none") {
-      await saveAllFavoritesForRun(runId);
+      await saveAllFavoritesForRun(run.runId);
 
     } else if (currentStatus === "partial") {
-      setRunToResolve(runId);
+      setRunToResolve(run.runId);
       setPartialDialogOpen(true);
     }
   };
@@ -198,28 +254,22 @@ const RunOverviewPage = () => {
     setRunToResolve(null);
   };
 
-  const handleViewPatients = async (runId) => {
-    const isReady = await checkRunHasData(runId);
-    if (!isReady) return;
+  const handleViewPatients = async (run) => {
+    if (!checkRunHasData(run)) return;
 
-    navigate(`/patients/${runId}`);
-    console.log("View patients clicked for run: ", runId);
+    navigate(`/patients/${run.runId}`);
+    console.log("View patients clicked for run: ", run);
   };
 
-  const checkRunHasData = async (runId) => {
-    try {
-      const response = await patientService.getPatientsByRunId(runId, 0, 1);
-      const hasData = response && response.totalElements > 0;
-
-      if (!hasData) {
-        showSnackbar("Run is still generating... Please wait.", "warning");
-      }
-      return hasData;
-    } catch (e) {
-      console.error("Check run data failed", e);
-      showSnackbar("Could not verify run status.", "error");
+  const checkRunHasData = (run) => {
+    if(run.status === "FAILED") {
+      showSnackbar("Run has failed to generate due to limited server capabilities. Please try again or reduce the sample size.", "warning");
       return false;
-    }
+    } else if(run.status ===  "RUNNING") {
+      showSnackbar("Run is still beeing generated. Please be patient we try our best.", "info");
+      return false;
+    } 
+    return true;
   };
 
   return (
@@ -238,6 +288,8 @@ const RunOverviewPage = () => {
                 isAdmin={isAdmin}
                 onDelete={openDeleteDialog}
                 onDownload={handleDownload}
+                onOmopProcess={handleOmopProcess}
+                onOmopDownload={handleOmopDownload}
                 onFavorite={handleFavorite}
                 onViewPatients={handleViewPatients}
                 runFavoriteStatus={runFavoriteStatus}

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.syntheaweb.backend.database.entity.Patient;
 import com.syntheaweb.backend.database.entity.Run;
+import com.syntheaweb.backend.database.entity.RunStatus;
 import com.syntheaweb.backend.database.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ import java.util.Optional;
 @Service
 public class SyntheaService {
 
-    private static final String SYNTHEA_DIRECTORY = "/synthea/";
+    private static final String SYNTHEA_DIRECTORY = "/synthea";
 
     @Autowired
     private PatientRepository patientRepository;
@@ -31,31 +32,79 @@ public class SyntheaService {
     @Autowired
     private StorageService storageService;
 
+    @Autowired
+    private RunRepository runRepository;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Async
+    public void runFullGenerationProcess(Run run)  {
+        try {
+            runRepository.updateRunStatus(run.getRunId(), RunStatus.RUNNING);
+
+            this.generateSyntheticData(
+                run.getRunId(),
+                run.getPopulationSize(),
+                run.getGender(),
+                run.getMinAge(),
+                run.getMaxAge(),
+                run.getState(),
+                run.getCity()
+            );
+
+            this.parseAndPersistPatients(run.getRunId(), run);
+
+            runRepository.updateRunStatus(run.getRunId(), RunStatus.SUCCESS);
+
+        } catch (Throwable e) {
+            runRepository.updateRunStatus(run.getRunId(), RunStatus.FAILED);
+            e.printStackTrace();
+        }
+    }
 
     public void generateSyntheticData(String runId, Integer populationSize, String gender, Integer minAge, Integer maxAge, String state, String city) throws IOException, InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder("./run_synthea");
+        //ProcessBuilder processBuilder = new ProcessBuilder("cmd.exe", "/c", "run_synthea.bat");
         addPopulationParameter(processBuilder, populationSize);
         addGenderParameter(processBuilder, gender);
         addAgeParameter(processBuilder, minAge, maxAge);
         addLocationParameter(processBuilder, state, city);
 
         processBuilder.directory(new File(SYNTHEA_DIRECTORY));
-        processBuilder.redirectErrorStream(true);
-        Process process = processBuilder.start();
 
-        /*
+        //logging handled by file (safe)
+        //processBuilder.redirectOutput(new File("synthea.log"));
+        //processBuilder.redirectErrorStream(true);
+
+        System.out.println("Starting Synthea...");
+
+        System.out.println("SYNTHEA_DIRECTORY = " + SYNTHEA_DIRECTORY);
+
+        File script = new File(SYNTHEA_DIRECTORY, "run_synthea");
+
+        System.out.println("Script exists: " + script.exists());
+        System.out.println("Script path: " + script.getAbsolutePath());
+
+        processBuilder.redirectErrorStream(true);
+
+        Process process = processBuilder.start();
+        System.out.println("Process started.");
+
+
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 System.out.println(line);
             }
         }
-        */
 
         int exitCode = process.waitFor();
         if (exitCode != 0) {
-            throw new RuntimeException("Error occurred while generating synthetic data.");
+            System.out.println("Synthea failed.");
+            throw new RuntimeException(
+                    "Error occurred while generating synthetic data. Exit code: "
+                            + exitCode
+            );
         }
 
         moveGeneratedOutputToRunFolder(runId, "fhir");

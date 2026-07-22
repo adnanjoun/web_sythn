@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 
+import com.syntheaweb.backend.database.entity.RunStatus;
+
 @Entity
 @Table(name = "runs")
 public class Run {
@@ -37,7 +39,15 @@ public class Run {
     @Column(nullable = true)
     private Integer maxAge;
 
-    public Run(String runId, User user, LocalDateTime createdAt, String state, String city, String gender, Integer populationSize, Integer minAge, Integer maxAge) {
+    @Column(nullable = false)
+    private boolean omopConverted = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(255) default 'SUCCESS'")
+    private RunStatus status = RunStatus.RUNNING;
+
+
+    public Run(String runId, User user, LocalDateTime createdAt, String state, String city, String gender, Integer populationSize, Integer minAge, Integer maxAge, boolean omopConverted,  RunStatus status) {
         this.runId = runId;
         this.user = user;
         this.createdAt = createdAt;
@@ -47,6 +57,8 @@ public class Run {
         this.populationSize = populationSize;
         this.minAge = minAge;
         this.maxAge = maxAge;
+        this.status = status;
+        this.omopConverted = omopConverted;
     }
 
     public Integer getMinAge() {
@@ -65,9 +77,7 @@ public class Run {
         this.maxAge = maxAge;
     }
 
-    public Run() {
-
-    }
+    public Run() {}
 
     public String getRunId() {
         return runId;
@@ -123,5 +133,21 @@ public class Run {
 
     public void setPopulationSize(Integer populationSize) {
         this.populationSize = populationSize;
+    }
+
+    public boolean isOmopConverted() {
+        return omopConverted;
+    }
+
+    public void setOmopConverted(boolean omopConverted) {
+        this.omopConverted = omopConverted;
+    }
+
+    public void setStatus(RunStatus status) {
+        this.status = status;
+    }
+
+    public RunStatus getStatus() {
+        return this.status;
     }
 }

@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import GenerateForm from "../components/forms/GenerateForm";
 import * as mui from "@mui/material";
 import axios from "axios";
-import { AuthContext } from "../AuthContext";
+import { useNavigate } from "react-router-dom";
 import { useSnackbar } from "../components/SnackbarProvider";
 import Layout from "../components/layout/Layout";
 
@@ -20,8 +20,9 @@ function GeneratePage() {
 
   const [runID, setRunID] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [downloading, setDownloading] = useState(false);
-  const [generationTime, setGenerationTime] = useState(null);
+
+  const navigate = useNavigate();
+  const navigateRunOverview = () => navigate("/runs");
 
   /**
    * handleInput
@@ -71,9 +72,11 @@ function GeneratePage() {
    * isPopulationSizeInvalid
    * True if populationSize is not empty AND <= 0.
    */
+  const maxPopulationSz = 10*1000;
+  const nPopulationSz = parseInt(generateOptions.populationSize);
   const isPopulationSizeInvalid =
     generateOptions.populationSize !== "" &&
-    parseInt(generateOptions.populationSize) <= 0;
+      0 < nPopulationSz  &&  nPopulationSz > maxPopulationSz;
 
   /**
    * isFormInvalid
@@ -90,7 +93,6 @@ function GeneratePage() {
     setLoading(true);
 
     const token = localStorage.getItem("token");
-    const startTime = Date.now();
 
     try {
       const response = await axios.post(
@@ -114,12 +116,8 @@ function GeneratePage() {
       }
 
       setRunID(response.data.runID);
-
-      const endTime = Date.now();
-      const elapsedTime = ((endTime - startTime) / 1000).toFixed(2);
-      setGenerationTime(elapsedTime);
       showSnackbar(
-        "Synthetic data generated and saved successfully!",
+        "Synthetic data generation started successfully! View the current status on the run overview page.",
         "success"
       );
     } catch (error) {
@@ -128,47 +126,8 @@ function GeneratePage() {
       setLoading(false);
     }
   };
+/*
 
-  /**
-   * handleDownload
-   * Initiates file download for the given format.
-   * Displays an info snackbar on start or error snackbar if it fails.
-   */
-  const handleDownload = async (format) => {
-    if (!runID) {
-      showSnackbar("No Run available for download!", "error");
-      return;
-    }
-
-    setDownloading(true);
-    showSnackbar(`Download of ${format.toUpperCase()} started.`, "info");
-
-    const token = localStorage.getItem("token");
-    try {
-      const response = await fetch(
-        `/api/synthea/download?runID=${runID}&format=${format}`,
-        {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Download error: ${response.statusText}`);
-      }
-
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = downloadUrl;
-      link.download = `${runID}_${format}.zip`;
-      link.click();
-    } catch (error) {
-      showSnackbar("Error downloading the file!", "error");
-    } finally {
-      setDownloading(false);
-    }
-  };
 
   /**
    * handleReturn
@@ -184,19 +143,18 @@ function GeneratePage() {
         Generate a synthetic population
       </mui.Typography>
       <GenerateForm
-        generateOptions={generateOptions}
-        onInputChange={handleInput}
-        onSubmit={handleGenerate}
-        runID={runID}
-        onDownload={handleDownload}
-        onReturn={handleReturn}
-        loading={loading}
-        downloading={downloading}
-        generationTime={generationTime}
-        isAgeInvalid={isAgeInvalid}
-        ageErrorMessage={ageErrorMessage}
-        isPopulationSizeInvalid={isPopulationSizeInvalid}
-        isFormInvalid={isFormInvalid}
+          generateOptions={generateOptions}
+          onInputChange={handleInput}
+          onSubmit={handleGenerate}
+          runID={runID}
+          onReturn={handleReturn}
+          loading={loading}
+          isAgeInvalid={isAgeInvalid}
+          ageErrorMessage={ageErrorMessage}
+          isPopulationSizeInvalid={isPopulationSizeInvalid}
+          isFormInvalid={isFormInvalid}
+          navigateRunOverview={navigateRunOverview}
+          maxPopulationSize={maxPopulationSz}
       />
     </Layout>
   );
