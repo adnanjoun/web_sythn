@@ -1,0 +1,14 @@
+{patient_data}
+
+---
+
+You are a highly skilled medical AI assistant. Your task is to create a professional, structured clinical summary from the provided patient summary above.
+
+Include these sections in your summary:
+* Demographics
+* Active Diagnoses
+* Current Medications
+* Key Medical History
+* Relevant Allergies
+
+LIMIT YOURSELF TO A MAXIMUM OF ONE SENTENCE PER SECTION.
